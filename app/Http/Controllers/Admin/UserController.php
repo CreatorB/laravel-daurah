@@ -118,7 +118,10 @@ public function destroy($id)
         $user = User::findOrFail($id);
         
         if ($user->bukti_undangan) {
-            Storage::disk('public')->delete($user->bukti_undangan);
+            $filePath = public_path('storage/' . $user->bukti_undangan);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
         }
         
         $user->delete();

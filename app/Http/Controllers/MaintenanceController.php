@@ -193,9 +193,25 @@ class MaintenanceController extends Controller
                 'output' => trim($output)
             ]);
         } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            
+            // Check if it's a common hosting issue
+            if (strpos($errorMessage, 'symlink') !== false || strpos($errorMessage, 'link') !== false) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Symlink failed on this hosting environment. Shared hosting often blocks symlinks. Please create manually via File Manager: create junction/shortcut from public/storage to storage/app/public',
+                    'solution' => 'manual',
+                    'alternatives' => [
+                        '1. Via File Manager: Create a folder shortcut/junction from public/storage to storage/app/public',
+                        '2. Or copy storage/app/public contents to public/storage manually',
+                        '3. Or enable symlink in cPanel PHP settings'
+                    ]
+                ], 500);
+            }
+            
             return response()->json([
                 'status' => 'error',
-                'message' => 'Storage link failed: ' . $e->getMessage()
+                'message' => 'Storage link failed: ' . $errorMessage
             ], 500);
         }
     }
