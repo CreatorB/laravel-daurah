@@ -178,4 +178,25 @@ class MaintenanceController extends Controller
             ], 500);
         }
     }
+
+    public function storageLink(Request $request)
+    {
+        if (!$this->authenticate($request)) {
+            return $this->unauthorized();
+        }
+
+        try {
+            Artisan::call('storage:link', ['--force' => true]);
+            $output = Artisan::output();
+
+            return $this->success('Storage symlink created/verified.', [
+                'output' => trim($output)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Storage link failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

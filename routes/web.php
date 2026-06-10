@@ -88,4 +88,5 @@ Route::prefix('maintenance')->group(function () {
     Route::get('/migrate-rollback', [MaintenanceController::class, 'migrateRollback']);
     Route::get('/migrate-status', [MaintenanceController::class, 'migrateStatus']);
     Route::get('/db-status', [MaintenanceController::class, 'dbStatus']);
+    Route::get('/storage-link', [MaintenanceController::class, 'storageLink']);
 });

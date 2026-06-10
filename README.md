@@ -36,7 +36,7 @@ The system supports two attendance modes: **geolocation-based** (validates parti
 
 | Feature | Description |
 |---------|-------------|
-| **Self-Registration** | Participants register via `/konfirmasi` without admin intervention. Fields include full name, institution/organization (default: `PRIBADI`), domicile, WhatsApp number, and accommodation preference. An Islamic agreement checkbox must be accepted before submission. |
+| **Self-Registration** | Participants register via `/konfirmasi` without admin intervention. Fields include full name, institution/organization (default: `PRIBADI`), domicile, WhatsApp number, accommodation preference, and bukti undangan (proof of invitation) upload (PDF/gambar, max 1MB dengan kompresi browser). An Islamic agreement checkbox must be accepted before submission. |
 | **Participant Dashboard** | Displays a large ID card with name, phone, institution, domicile, and accommodation status. Shows per-event registration status (Confirmed / Pending). Auto-displays WhatsApp group invitation link when registration is confirmed. |
 | **Geolocation Attendance** | When a session is active, participants submit attendance via browser geolocation. The system validates distance against event coordinates using the Haversine formula. |
 | **Material Confirmation** | Participants confirm material pickup — either once at event start or per session, depending on event configuration. |
@@ -52,7 +52,7 @@ The system supports two attendance modes: **geolocation-based** (validates parti
 | **Participant Confirmation** | List participants per event with filter capabilities. Actions include: Confirm (ACC), Send WhatsApp, Delete. Bulk confirmation (ACC All). |
 | **WhatsApp Integration** | Auto-generated messages include event name, date, full session schedule, reminders, and group invitation link. Opens `wa.me` deep link. |
 | **CSV Export** | Export participant lists per event as UTF-8 BOM CSV (Excel-compatible). |
-| **User Management** | Full CRUD for users. CSV import/export. Edit participant profiles. |
+| **User Management** | Full CRUD for users. CSV import/export. Edit participant profiles. User detail modal with bukti undangan preview. Sort by nama, lembaga, created_at. Filter by search, date range. |
 | **Attendance History** | Filterable attendance records across all events and sessions. |
 | **QR Scan Monitor** | Real-time monitor for QR code scanning during events. |
 
@@ -167,6 +167,7 @@ Key variables that must be configured:
 
 ```env
 APP_NAME="Dauroh Syariyyah"
+DAURAH_NAME="Daurah Syariyyah ke-6"   # Judul Daurah di action bar (bisa diubah sesuai event)
 APP_ENV=local              # Use 'production' in live environment
 APP_KEY=                   # Generated via php artisan key:generate
 APP_DEBUG=true             # Set to 'false' in production
@@ -253,7 +254,7 @@ daurah-laravel/
 
 | Table | Description | Key Fields |
 |-------|-------------|------------|
-| `users` | Participants | `name`, `nohp` (phone), `lembaga` (institution), `domisili` (domicile), `menginap` (accommodation), `role` (admin/user), `created_at`, `updated_at` |
+| `users` | Participants | `name`, `nohp` (phone), `lembaga` (institution), `domisili` (domicile), `menginap` (accommodation), `role` (admin/user), `bukti_undangan` (file path), `created_at`, `updated_at` |
 | `events` | Event information | `nama`, `tanggal`, `qr_mode` (static/dynamic), `latitude`, `longitude`, `radius`, `geolocation_enabled`, `group_link` (WhatsApp), `auto_confirm`, `material_type`, `created_at`, `updated_at` |
 | `event_sessions` | Sessions per event | `event_id`, `nama_sesi`, `jam_mulai`, `jam_selesai` |
 | `event_registrations` | Participant registrations | `user_id`, `event_id`, `status` (pending/confirmed), `auto_invite` |
@@ -545,9 +546,10 @@ If the lock file has PHP version conflicts, use:
 Via File Manager or SSH:
 
 ```
-storage/          → 755
-bootstrap/cache/  → 755
-public/           → 755
+storage/                  → 755
+bootstrap/cache/          → 755
+public/                   → 755
+storage/app/public/bukti_undangan/  → 775 (untuk upload file bukti undangan)
 ```
 
 SSH commands:
@@ -555,6 +557,32 @@ SSH commands:
 ```bash
 cd ~/daurah.syathiby.id
 chmod -R 755 storage bootstrap/cache
+chmod -R 775 storage/app/public/bukti_undangan
+```
+
+---
+
+#### Step 7b: Setup Storage Symlink (Important!)
+
+Laravel memerlukan symlink agar file di `storage/app/public/` bisa diakses via URL `/storage/`. Tanpa ini, file bukti undangan tidak bisa di-download.
+
+**Di cPanel Terminal (SSH):**
+
+```bash
+cd ~/daurah.syathiby.id/public
+ln -s ../storage/app/public storage
+```
+
+Atau手动 create junction di Windows (local development):
+
+```powershell
+cmd /c mklink /D "C:\laragon\www\daurah-laravel\public\storage" "C:\laragon\www\daurah-laravel\storage\app\public"
+```
+
+**Verifikasi:**
+```bash
+ls -la public/storage
+# Should show: storage -> ../storage/app/public
 ```
 
 ---
@@ -566,6 +594,15 @@ Via SSH with PHP 8.2:
 ```bash
 /opt/cpanel/ea-php82/root/usr/bin/php ~/daurah.syathiby.id/artisan migrate --force
 ```
+
+**New Migration - bukti_undangan column:**
+Jika migrate gagal karena kolom sudah ada, skip migration ini atau edit manually:
+
+```sql
+ALTER TABLE users ADD COLUMN bukti_undangan VARCHAR(255) NULL AFTER menginap;
+```
+
+**Pastikan kolom `bukti_undangan` ada di tabel `users`.**
 
 Or via the web-based Maintenance endpoints (see Maintenance section below).
 
@@ -700,6 +737,7 @@ MAINTENANCE_PASSWORD=your-secure-password-here
 | GET | `/maintenance/migrate-rollback` | `php artisan migrate:rollback --force` |
 | GET | `/maintenance/migrate-status` | Show migration status (JSON) |
 | GET | `/maintenance/db-status` | Show database tables and row counts |
+| GET | `/maintenance/storage-link` | `php artisan storage:link` - Buat symlink storage |
 
 **Example Usage:**
 
@@ -788,6 +826,61 @@ When updating to a new version:
 4. Run `npm install && npm run build`
 5. Run `php artisan migrate` (if migrations changed)
 6. Clear all caches: `php artisan config:clear && view:clear && cache:clear && route:clear`
+7. **Penting:** Jika ada migration baru untuk `bukti_undangan`, pastikan:
+   - Directory `storage/app/public/bukti_undangan/` exists
+   - Storage symlink `public/storage` sudah dibuat
+   - Jalankan `php artisan storage:link` jika perlu
+
+---
+
+## Deployment Checklist
+
+Gunakan checklist ini saat deploy ke server (cPanel):
+
+### Pre-Deployment (Local)
+
+- [ ] Edit `.env` untuk production (`APP_ENV=production`, `APP_DEBUG=false`)
+- [ ] Pastikan `DAURAH_NAME` sesuai dengan event yang akan dijalankan
+- [ ] Pastikan `FILESYSTEM_DISK=local` (untuk shared hosting)
+- [ ] Jalankan `npm run build` untuk build frontend assets
+- [ ] Commit semua perubahan ke git
+
+### Server Setup
+
+- [ ] Set PHP version ke ea-php82 di MultiPHP Manager
+- [ ] Upload / pull project files ke server
+- [ ] `composer install --no-dev --optimize-autoloader`
+- [ ] Set directory permissions: `chmod -R 755 storage bootstrap/cache`
+- [ ] Buat storage symlink: `ln -s ../storage/app/public storage` di folder `public/`
+- [ ] Buat directory `storage/app/public/bukti_undangan/` dengan permissions 775
+
+### Database
+
+- [ ] Buat database dan user di MySQL Databases cPanel
+- [ ] Import database lama jika ada (atau fresh migrate)
+- [ ] Jalankan `php artisan migrate --force`
+- [ ] Jika error kolom `bukti_undangan` sudah ada, skip migration atau tambah manual:
+  ```sql
+  ALTER TABLE users ADD COLUMN bukti_undangan VARCHAR(255) NULL AFTER menginap;
+  ```
+
+### Post-Deployment
+
+- [ ] `php artisan config:clear`
+- [ ] `php artisan view:clear`
+- [ ] `php artisan cache:clear`
+- [ ] Test upload bukti undangan di `/konfirmasi`
+- [ ] Test download file di `/storage/bukti_undangan/[nohp].pdf`
+- [ ] Test admin users page: filter, sort, export CSV/Excel
+
+### File & Folder yang Perlu Diperhatikan
+
+| Path | Deskripsi |
+|------|-----------|
+| `storage/app/public/bukti_undangan/` | Folder penyimpanan file bukti undangan |
+| `public/storage` | Symlink ke `storage/app/public/` |
+| `.env` |WAJIB ada `DAURAH_NAME` dan `FILESYSTEM_DISK=local` |
+| `database/migrations/*bukti_undangan*.php` | Migration untuk kolom bukti_undangan |
 
 ---
 
