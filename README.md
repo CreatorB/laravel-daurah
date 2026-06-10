@@ -562,21 +562,15 @@ chmod -R 775 storage/app/public/bukti_undangan
 
 ---
 
-#### Step 7b: Setup Storage Symlink (Important!)
+#### Step 7b: Setup Storage Symlink
 
-Laravel memerlukan symlink agar file di `storage/app/public/` bisa diakses via URL `/storage/`. Tanpa ini, file bukti undangan tidak bisa di-download.
+File bukti undangan served via PHP route `/file/bukti-undangan/{filename}` (tidak perlu symlink).
 
-**Di cPanel Terminal (SSH):**
+**Symlink masih diperlukan untuk kompatibilitas:**
 
 ```bash
 cd ~/daurah.syathiby.id/public
 ln -s ../storage/app/public storage
-```
-
-Atau手动 create junction di Windows (local development):
-
-```powershell
-cmd /c mklink /D "C:\laragon\www\daurah-laravel\public\storage" "C:\laragon\www\daurah-laravel\storage\app\public"
 ```
 
 **Verifikasi:**
@@ -737,7 +731,7 @@ MAINTENANCE_PASSWORD=your-secure-password-here
 | GET | `/maintenance/migrate-rollback` | `php artisan migrate:rollback --force` |
 | GET | `/maintenance/migrate-status` | Show migration status (JSON) |
 | GET | `/maintenance/db-status` | Show database tables and row counts |
-| GET | `/maintenance/storage-link` | `php artisan storage:link` - Buat symlink storage |
+| GET | `/maintenance/storage-link` | `php artisan storage:link` - Buat symlink storage (untuk backward compatibility) |
 
 **Example Usage:**
 
@@ -870,7 +864,7 @@ Gunakan checklist ini saat deploy ke server (cPanel):
 - [ ] `php artisan view:clear`
 - [ ] `php artisan cache:clear`
 - [ ] Test upload bukti undangan di `/konfirmasi`
-- [ ] Test download file di `/storage/bukti_undangan/[nohp].pdf`
+- [ ] Test download file di `/file/bukti-undangan/[filename].pdf`
 - [ ] Test admin users page: filter, sort, export CSV/Excel
 
 ### File & Folder yang Perlu Diperhatikan
@@ -878,8 +872,9 @@ Gunakan checklist ini saat deploy ke server (cPanel):
 | Path | Deskripsi |
 |------|-----------|
 | `storage/app/public/bukti_undangan/` | Folder penyimpanan file bukti undangan |
-| `public/storage` | Symlink ke `storage/app/public/` |
-| `.env` |WAJIB ada `DAURAH_NAME` dan `FILESYSTEM_DISK=local` |
+| `public/storage` | Symlink ke `storage/app/public/` (backward compatibility) |
+| `/file/bukti-undangan/{filename}` | Route PHP untuk serve file (utama) |
+| `.env` |WAJIB ada `MAINTENANCE_PASSWORD` dan `FILESYSTEM_DISK=local` |
 | `database/migrations/*bukti_undangan*.php` | Migration untuk kolom bukti_undangan |
 
 ---
