@@ -58,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/users/{id}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/admin/users/import', [UserController::class, 'importCsv'])->name('admin.users.import');
     Route::get('/admin/users/export', [UserController::class, 'exportCsv'])->name('admin.users.export');
+    Route::get('/admin/users/export-excel', [UserController::class, 'exportExcel'])->name('admin.users.export-excel');
     
     Route::get('/admin/history', [HistoryController::class, 'index'])->name('admin.history');
     

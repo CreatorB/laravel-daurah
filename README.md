@@ -108,6 +108,11 @@ cd /path/to/daurah-laravel
 composer install
 ```
 
+laragon :
+```bash
+C:\laragon\bin\php\php-8.2.27-nts-Win32-vs16-x64\php.exe C:\laragon\bin\composer\composer.phar install
+```
+
 ### 3. Install Node Dependencies
 
 ```bash
