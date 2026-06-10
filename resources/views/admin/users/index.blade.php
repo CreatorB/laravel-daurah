@@ -210,9 +210,9 @@
                                 @endphp
                                 @if(in_array(strtolower($extension), ['jpg', 'jpeg', 'png']))
                                     <div class="mt-2">
-                                        <img src="{{ asset('storage/' . $user->bukti_undangan) }}" alt="Bukti Undangan" class="img-fluid rounded" style="max-height: 300px;">
+                                        <img src="{{ route('file.bukti-undangan', ['filename' => basename($user->bukti_undangan)]) }}" alt="Bukti Undangan" class="img-fluid rounded" style="max-height: 300px;">
                                     </div>
-                                    <a href="{{ asset('storage/' . $user->bukti_undangan) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                    <a href="{{ route('file.bukti-undangan', ['filename' => basename($user->bukti_undangan)]) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
                                         <i class="fas fa-external-link-alt me-1"></i>Buka di Tab Baru
                                     </a>
                                 @else
@@ -220,7 +220,7 @@
                                         <div class="alert alert-info mb-0">
                                             <i class="fas fa-file-pdf me-2"></i>{{ basename($user->bukti_undangan) }}
                                         </div>
-                                        <a href="{{ asset('storage/' . $user->bukti_undangan) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                        <a href="{{ route('file.bukti-undangan', ['filename' => basename($user->bukti_undangan)]) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
                                             <i class="fas fa-download me-1"></i>Download PDF
                                         </a>
                                     </div>

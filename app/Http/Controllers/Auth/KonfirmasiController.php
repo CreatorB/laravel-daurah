@@ -54,13 +54,9 @@ class KonfirmasiController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 $filename = $nohp . '.' . $extension;
                 
-                $publicStoragePath = public_path('storage/bukti_undangan');
-                if (!file_exists($publicStoragePath)) {
-                    mkdir($publicStoragePath, 0755, true);
-                }
-                
-                $file->move($publicStoragePath, $filename);
-                $buktiUndanganPath = 'bukti_undangan/' . $filename;
+                $path = 'bukti_undangan/' . $filename;
+                Storage::disk('public')->put($path, file_get_contents($file));
+                $buktiUndanganPath = $path;
             }
 
             $user = User::create([

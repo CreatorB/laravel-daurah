@@ -14,6 +14,7 @@ use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\QrController;
 use App\Http\Controllers\ProsesScanController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\FileController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -75,6 +76,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/monitor/{eventId}/session', [MonitorController::class, 'getSessionInfo'])->name('monitor.session');
     
     Route::get('/download-qr/{eventId}', [QrController::class, 'download'])->name('download.qr');
+
+Route::get('/file/bukti-undangan/{filename}', [FileController::class, 'serveBuktiUndangan'])->name('file.bukti-undangan');
     
 Route::get('/proses-scan/{eventId}', [ProsesScanController::class, 'proses'])->name('proses.scan');
 });
