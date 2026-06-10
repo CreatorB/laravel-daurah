@@ -109,7 +109,7 @@
                                     {{ $user->nama }}
                                 </a>
                             </td>
-                            <td>+{{ $user->nohp }}</td>
+                            <td><a href="https://wa.me/{{ str_replace('0', '62', $user->nohp) }}" target="_blank" class="text-success text-decoration-none">{{ $user->nohp }}</a></td>
                             <td>{{ $user->lembaga }}</td>
                             <td>{{ $user->domisili }}</td>
                             <td>
@@ -167,7 +167,7 @@
                             </tr>
                             <tr>
                                 <td class="text-muted">No HP</td>
-                                <td>+{{ $user->nohp }}</td>
+                                <td><a href="https://wa.me/{{ str_replace('0', '62', $user->nohp) }}" target="_blank" class="text-success text-decoration-none">{{ $user->nohp }}</a></td>
                             </tr>
                             <tr>
                                 <td class="text-muted">Email</td>
