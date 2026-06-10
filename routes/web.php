@@ -27,6 +27,8 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/konfirmasi', [KonfirmasiController::class, 'showForm'])->name('konfirmasi');
 Route::post('/konfirmasi', [KonfirmasiController::class, 'store']);
 
+Route::get('/file/bukti-undangan/{filename}', [FileController::class, 'serveBuktiUndangan'])->name('file.bukti-undangan');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     
@@ -75,9 +77,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/monitor/{eventId}/qr', [MonitorController::class, 'generateQr'])->name('monitor.qr');
     Route::get('/monitor/{eventId}/session', [MonitorController::class, 'getSessionInfo'])->name('monitor.session');
     
-    Route::get('/download-qr/{eventId}', [QrController::class, 'download'])->name('download.qr');
-
-Route::get('/file/bukti-undangan/{filename}', [FileController::class, 'serveBuktiUndangan'])->name('file.bukti-undangan');
+Route::get('/download-qr/{eventId}', [QrController::class, 'download'])->name('download.qr');
     
 Route::get('/proses-scan/{eventId}', [ProsesScanController::class, 'proses'])->name('proses.scan');
 });
