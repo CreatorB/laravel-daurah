@@ -121,8 +121,35 @@ public function destroy($id)
             Storage::disk('public')->delete($user->bukti_undangan);
         }
         
+        $user->registrations()->delete();
+        $user->attendances()->delete();
         $user->delete();
+        
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus!');
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $idsInput = $request->input('ids', '[]');
+        $ids = is_array($idsInput) ? $idsInput : json_decode($idsInput, true);
+
+        if (empty($ids)) {
+            return redirect()->route('admin.users.index')->with('error', 'Tidak ada user yang dipilih!');
+        }
+
+        $users = User::whereIn('id', $ids)->get();
+        
+        foreach ($users as $user) {
+            if ($user->bukti_undangan) {
+                Storage::disk('public')->delete($user->bukti_undangan);
+            }
+            $user->registrations()->delete();
+            $user->attendances()->delete();
+            $user->delete();
+        }
+        
+        $count = count($users);
+        return redirect()->route('admin.users.index')->with('success', "$count user berhasil dihapus!");
     }
 
     public function importCsv(Request $request)

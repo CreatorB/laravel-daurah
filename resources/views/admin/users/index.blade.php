@@ -47,6 +47,9 @@
                 <i class="fas fa-upload me-1"></i><span class="d-none d-sm-inline">Import CSV</span>
             </label>
         </form>
+        <button type="button" class="btn btn-outline-danger btn-sm" id="bulkDeleteBtn" onclick="bulkDelete()" disabled>
+            <i class="fas fa-trash me-1"></i><span class="d-none d-sm-inline">Hapus Terpilih</span>
+        </button>
         <a href="{{ route('admin.users.create') }}" class="btn btn btn-primary gradient-bg btn-sm">
             <i class="fas fa-user-plus me-1"></i><span class="d-none d-sm-inline">User</span> Baru
         </a>
@@ -61,7 +64,11 @@
     @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-    
+
+    @if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
     <div class="card">
         <div class="card-body p-0">
             @if($users->count() > 0)
@@ -69,6 +76,9 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
+                            <th style="width: 50px;">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                            </th>
                             <th style="width: 50px;">No</th>
                             <th style="cursor: pointer;" onclick="sortTable('nama')">
                                 Nama
@@ -103,6 +113,9 @@
                     <tbody>
                         @foreach($users as $index => $user)
                         <tr>
+                            <td>
+                                <input type="checkbox" class="user-checkbox" value="{{ $user->id }}" onchange="updateSelectAll()">
+                            </td>
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 <a href="#" class="text-primary text-decoration-none" data-bs-toggle="modal" data-bs-target="#userDetailModal{{ $user->id }}">
@@ -247,14 +260,73 @@
 function sortTable(field) {
     const url = new URL(window.location.href);
     const currentSort = url.searchParams.get('sort');
-    
+
     if (currentSort === field) {
         url.searchParams.set('sort', field + '_desc');
     } else {
         url.searchParams.set('sort', field);
     }
-    
+
     window.location.href = url.toString();
+}
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateBulkDeleteButton();
+}
+
+function updateSelectAll() {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+
+    selectAllCheckbox.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
+    selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    bulkDeleteBtn.disabled = checkedCount === 0;
+    bulkDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i><span class="d-none d-sm-inline">Hapus Terpilih</span>' + (checkedCount > 0 ? ' (' + checkedCount + ')' : '');
+}
+
+function bulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+
+    if (checkedBoxes.length === 0) {
+        alert('Pilih user yang akan dihapus terlebih dahulu!');
+        return;
+    }
+
+    if (!confirm('Hapus ' + checkedBoxes.length + ' user yang dipilih? Semua data terkait (registrasi, absensi) dan file bukti undangan juga akan dihapus.')) {
+        return;
+    }
+
+    const ids = Array.from(checkedBoxes).map(cb => cb.value);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route('admin.users.bulk-delete') }}';
+
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    form.appendChild(csrfToken);
+
+    const idsInput = document.createElement('input');
+    idsInput.type = 'hidden';
+    idsInput.name = 'ids';
+    idsInput.value = JSON.stringify(ids);
+    form.appendChild(idsInput);
+
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>
 @endsection

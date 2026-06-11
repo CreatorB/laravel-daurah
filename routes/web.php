@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/events/{id}/delete', [EventController::class, 'destroy'])->name('admin.events.destroy');
     
     Route::post('/admin/events/{id}/sessions', [EventController::class, 'addSession'])->name('admin.events.sessions.store');
+    Route::post('/admin/events/sessions/{id}/update', [EventController::class, 'updateSession'])->name('admin.events.sessions.update');
     Route::post('/admin/events/sessions/{id}/delete', [EventController::class, 'deleteSession'])->name('admin.events.sessions.delete');
     
     Route::post('/admin/events/{id}/invite', [EventController::class, 'inviteUsers'])->name('admin.events.invite');
@@ -53,9 +54,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/konfirmasi/{eventId}/acc-all', [AdminKonfirmasiController::class, 'accAll'])->name('admin.konfirmasi.acc-all');
     Route::get('/admin/konfirmasi/{eventId}/export', [AdminKonfirmasiController::class, 'exportCsv'])->name('admin.konfirmasi.export');
     
-    Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::post('/admin/users/bulk-delete', [UserController::class, 'destroyBulk'])->name('admin.users.bulk-delete');
     Route::get('/admin/users/{id}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::post('/admin/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/users/{id}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
