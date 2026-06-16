@@ -8,22 +8,26 @@
     
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card text-center h-100 gradient-bg text-white">
-                <div class="card-body p-2">
-                    <i class="fas fa-calendar-alt fa-2x mb-2 opacity-75"></i>
-                    <h3 class="mb-1">{{ $stats['total_events'] }}</h3>
-                    <small class="opacity-75" style="font-size: 0.7rem;">Total Event</small>
+            <a href="{{ route('admin.events.index') }}" class="text-decoration-none">
+                <div class="card text-center h-100 gradient-bg text-white" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="card-body p-2">
+                        <i class="fas fa-calendar-alt fa-2x mb-2 opacity-75"></i>
+                        <h3 class="mb-1">{{ $stats['total_events'] }}</h3>
+                        <small class="opacity-75" style="font-size: 0.7rem;">Total Event</small>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card text-center h-100" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">
-                <div class="card-body p-2">
-                    <i class="fas fa-users fa-2x mb-2 opacity-75"></i>
-                    <h3 class="mb-1">{{ $stats['total_users'] }}</h3>
-                    <small class="opacity-75" style="font-size: 0.7rem;">Total User</small>
+            <a href="{{ route('admin.users.index') }}" class="text-decoration-none">
+                <div class="card text-center h-100" style="background: linear-gradient(135deg, #10b981, #34d399); color: white; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    <div class="card-body p-2">
+                        <i class="fas fa-users fa-2x mb-2 opacity-75"></i>
+                        <h3 class="mb-1">{{ $stats['total_users'] }}</h3>
+                        <small class="opacity-75" style="font-size: 0.7rem;">Total User</small>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
             <div class="card text-center h-100" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white;">
