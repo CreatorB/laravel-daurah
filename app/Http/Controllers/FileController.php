@@ -15,9 +15,6 @@ class FileController extends Controller
             abort(404);
         }
 
-        $file = Storage::disk('public')->get($path);
-        $mimeType = Storage::disk('public')->mimeType($path);
-
-        return response($file, 200)->header('Content-Type', $mimeType);
+        return Storage::disk('public')->response($path);
     }
 }

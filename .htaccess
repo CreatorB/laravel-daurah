@@ -11,6 +11,12 @@ SetHandler application/x-lsphp82
 
     RewriteEngine On
 
+    # Map /storage/bukti_undangan to public/storage/bukti_undangan
+    RewriteRule ^storage/bukti_undangan/(.*)$ public/storage/bukti_undangan/$1 [L]
+
+    # Skip rewriting for static files
+    RewriteRule \.(jpg|jpeg|png|gif|pdf|JPG|JPEG|PNG|GIF|PDF)$ - [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]
