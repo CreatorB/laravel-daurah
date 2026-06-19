@@ -572,6 +572,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.absensi.index') }}">
+                            <i class="fas fa-clipboard-list me-1"></i>Absensi
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.users.index') }}">
                             <i class="fas fa-users me-1"></i>Users
                         </a>

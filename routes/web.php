@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\KonfirmasiController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\KonfirmasiController as AdminKonfirmasiController;
+use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
@@ -53,7 +54,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/konfirmasi/{id}/hapus', [AdminKonfirmasiController::class, 'hapus'])->name('admin.konfirmasi.hapus');
     Route::post('/admin/konfirmasi/{eventId}/acc-all', [AdminKonfirmasiController::class, 'accAll'])->name('admin.konfirmasi.acc-all');
     Route::get('/admin/konfirmasi/{eventId}/export', [AdminKonfirmasiController::class, 'exportCsv'])->name('admin.konfirmasi.export');
-    
+
+    Route::get('/admin/absensi', [AbsensiController::class, 'index'])->name('admin.absensi.index');
+    Route::get('/admin/absensi/{eventId}', [AbsensiController::class, 'index'])->name('admin.absensi.event');
+    Route::get('/admin/absensi/{eventId}/export-csv', [AbsensiController::class, 'exportCsv'])->name('admin.absensi.export-csv');
+    Route::get('/admin/absensi/{eventId}/export-excel', [AbsensiController::class, 'exportExcel'])->name('admin.absensi.export-excel');
+
 Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
@@ -94,4 +100,28 @@ Route::prefix('maintenance')->group(function () {
     Route::get('/migrate-status', [MaintenanceController::class, 'migrateStatus']);
     Route::get('/db-status', [MaintenanceController::class, 'dbStatus']);
     Route::get('/storage-link', [MaintenanceController::class, 'storageLink']);
+});
+
+Route::get('/debug-session-check', function() {
+    date_default_timezone_set('Asia/Jakarta');
+    $userId = \Illuminate\Support\Facades\Session::get('user_id');
+    $today = date('Y-m-d');
+    $now = date('H:i:s');
+    $myEvents = \App\Models\EventRegistration::where('user_id', $userId)
+        ->with('event.sessions')
+        ->whereHas('event', function($q) use ($today) {
+            $q->where('tanggal', '>=', $today);
+        })
+        ->get();
+    $output = "User ID: $userId<br>Today: $today<br>Now: $now<br>Timezone: " . date_default_timezone_get() . "<br><br>";
+    $output .= "myEvents count: " . $myEvents->count() . "<br><br>";
+    foreach ($myEvents as $reg) {
+        $output .= "Reg ID: {$reg->id}, Event: {$reg->event->nama_event}, Tanggal: {$reg->event->tanggal}<br>";
+        foreach ($reg->event->sessions as $s) {
+            $isActive = ($now >= $s->jam_mulai && $now <= $s->jam_selesai) ? 'YES ACTIVE' : 'no';
+            $output .= "  - {$s->nama_sesi}: {$s->jam_mulai} - {$s->jam_selesai} [$isActive]<br>";
+        }
+        $output .= "<br>";
+    }
+    return $output;
 });

@@ -30,8 +30,9 @@ class DashboardController extends Controller
             return redirect()->route('login');
         }
 
-        $today = date('Y-m-d');
-        $now = date('H:i:s');
+        $nowJakarta = \Carbon\Carbon::now('Asia/Jakarta');
+        $today = $nowJakarta->format('Y-m-d');
+        $now = $nowJakarta->format('H:i:s');
 
         $myEvents = EventRegistration::where('user_id', $userId)
             ->with('event.sessions')
@@ -76,8 +77,13 @@ class DashboardController extends Controller
                 }
             }
 
-            if (!$nextSession && $reg->event->tanggal >= $today) {
-                $nextSession = $reg->event->sessions->first();
+            if (!$activeSession && !$nextSession && $reg->event->tanggal >= $today) {
+                if ($reg->event->tanggal == $today) {
+                    $upcoming = $reg->event->sessions->first(fn($s) => $s->jam_mulai > $now);
+                    $nextSession = $upcoming ?? $reg->event->sessions->last();
+                } else {
+                    $nextSession = $reg->event->sessions->first();
+                }
                 $currentEvent = $reg->event;
             }
         }
@@ -88,6 +94,12 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $allAttendances = Attendance::where('user_id', $userId)->orderBy('waktu_scan')->get();
+        $eventMateriConfirmed = $allAttendances->groupBy('event_id')
+            ->map(fn($group) => $group->contains('materi_confirmed', true));
+        $eventFirstAttendanceId = $allAttendances->groupBy('event_id')
+            ->map(fn($group) => $group->first()->id);
+
         $certificates = Event::whereNotNull('cert_template')
             ->where('cert_template', '!=', '')
             ->whereHas('attendances', function($q) use ($userId) {
@@ -96,7 +108,7 @@ class DashboardController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        return view('user.dashboard', compact('user', 'myEvents', 'activeSession', 'nextSession', 'currentEvent', 'attendances', 'certificates'));
+        return view('user.dashboard', compact('user', 'myEvents', 'activeSession', 'nextSession', 'currentEvent', 'attendances', 'certificates', 'eventMateriConfirmed', 'eventFirstAttendanceId'));
     }
 
     public function absen(Request $request)
