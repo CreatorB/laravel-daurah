@@ -8,6 +8,7 @@ use App\Models\EventRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class KonfirmasiController extends Controller
 {
@@ -20,28 +21,44 @@ class KonfirmasiController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'lembaga' => 'nullable|string|max:255',
+            'lembaga' => 'required|string|max:255',
             'domisili' => 'required|string|max:255',
             'nohp' => 'required|string|max:20',
             'menginap' => 'required|in:ya,tidak',
             'agreement' => 'required|accepted',
+            'bukti_undangan' => 'required|file|mimes:pdf,jpg,jpeg,png|max:1024',
         ], [
             'nama.required' => 'Nama harus diisi',
+            'lembaga.required' => 'Lembaga harus diisi',
             'domisili.required' => 'Domisili harus diisi',
             'nohp.required' => 'Nomor WhatsApp harus diisi',
             'menginap.required' => 'Pilihan menginap harus diisi',
             'agreement.required' => 'Anda harus menyetujui agreement',
             'agreement.accepted' => 'Anda harus menyetujui agreement',
+            'bukti_undangan.required' => 'Bukti undangan harus diupload',
+            'bukti_undangan.mimes' => 'Bukti undangan harus format PDF, JPG, atau PNG',
+            'bukti_undangan.max' => 'Ukuran bukti undangan maksimal 1MB',
         ]);
 
         $nohp = $this->formatPhone($request->nohp);
         
         $existingUser = User::where('nohp', $nohp)->first();
         if ($existingUser) {
-            return redirect()->back()->with('error', 'Nomor WhatsApp sudah terdaftar. Silakan login langsung.');
+            return redirect()->back()->with('error', 'Nomor WhatsApp sudah terdaftar. Silakan login langsung.')->withInput();
         }
 
         try {
+            $buktiUndanganPath = null;
+            if ($request->hasFile('bukti_undangan')) {
+                $file = $request->file('bukti_undangan');
+                $extension = $file->getClientOriginalExtension();
+                $filename = $nohp . '.' . $extension;
+                
+                $path = 'bukti_undangan/' . $filename;
+                Storage::disk('public')->put($path, file_get_contents($file));
+                $buktiUndanganPath = $path;
+            }
+
             $user = User::create([
                 'nama' => $request->nama,
                 'lembaga' => $request->lembaga ?: 'PRIBADI',
@@ -51,6 +68,7 @@ class KonfirmasiController extends Controller
                 'menginap' => $request->menginap,
                 'agreement_accepted_at' => now(),
                 'role' => 'user',
+                'bukti_undangan' => $buktiUndanganPath,
             ]);
 
             Session::put('user_id', $user->id);
@@ -61,7 +79,7 @@ class KonfirmasiController extends Controller
             return redirect()->route('user.dashboard')->with('success', 'Pendaftaran berhasil! Selamat datang di Daurah Syariyyah.');
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
 

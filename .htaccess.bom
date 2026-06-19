@@ -1,0 +1,14 @@
+# Disable UTF-8 BOM for binary outputs
+<IfModule mod_lsapi>
+    lsapi_disable_rfc3875_headers On
+</IfModule>
+
+<IfModule mod_headers>
+    Header unset Content-Length
+</IfModule>
+
+# PHP settings
+<IfModule php_module>
+    php_flag output_buffering Off
+    php_value output_buffering 0
+</IfModule>

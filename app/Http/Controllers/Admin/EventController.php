@@ -161,6 +161,25 @@ class EventController extends Controller
         return redirect()->back()->with('success', 'Sesi berhasil ditambahkan!');
     }
 
+public function updateSession(Request $request, $id)
+    {
+        $session = EventSession::findOrFail($id);
+
+        $request->validate([
+            'nama_sesi' => 'required|string|max:255',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required|after:jam_mulai',
+        ]);
+
+        $session->update([
+            'nama_sesi' => $request->nama_sesi,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+        ]);
+
+        return redirect()->back()->with('success', 'Sesi berhasil diupdate!');
+    }
+
     public function deleteSession($id)
     {
         $session = EventSession::findOrFail($id);

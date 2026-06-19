@@ -547,7 +547,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-mosque me-2"></i>Daurah Syariyyah
+                <i class="fas fa-mosque me-2"></i>{{ config('app.daurah_name') }}
             </a>
             @if(session('user_id'))
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

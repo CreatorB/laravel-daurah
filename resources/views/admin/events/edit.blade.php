@@ -133,11 +133,23 @@
                     </thead>
                     <tbody>
                         @foreach($event->sessions as $session)
-                        <tr>
-                            <td>{{ $session->nama_sesi }}</td>
-                            <td>{{ $session->jam_mulai }}</td>
-                            <td>{{ $session->jam_selesai }}</td>
+                        <tr data-session-id="{{ $session->id }}">
                             <td>
+                                <span class="session-view">{{ $session->nama_sesi }}</span>
+                                <input type="text" name="nama_sesi" class="form-control form-control-sm session-edit d-none" value="{{ $session->nama_sesi }}" data-original="{{ $session->nama_sesi }}">
+                            </td>
+                            <td>
+                                <span class="session-view">{{ $session->jam_mulai }}</span>
+                                <input type="time" name="jam_mulai" class="form-control form-control-sm session-edit d-none" value="{{ $session->jam_mulai }}" data-original="{{ $session->jam_mulai }}">
+                            </td>
+                            <td>
+                                <span class="session-view">{{ $session->jam_selesai }}</span>
+                                <input type="time" name="jam_selesai" class="form-control form-control-sm session-edit d-none" value="{{ $session->jam_selesai }}" data-original="{{ $session->jam_selesai }}">
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary btn-edit-session d-none" onclick="saveSession({{ $session->id }})"><i class="fas fa-check"></i></button>
+                                <button type="button" class="btn btn-sm btn-secondary btn-cancel-session d-none" onclick="cancelEdit({{ $session->id }})"><i class="fas fa-times"></i></button>
+                                <button type="button" class="btn btn-sm btn-primary btn-show-edit" onclick="showEdit({{ $session->id }})"><i class="fas fa-edit"></i></button>
                                 <form action="{{ route('admin.events.sessions.delete', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus sesi ini?')">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
@@ -197,6 +209,43 @@ function updateDiameterEdit() {
     const d = r * 2;
     document.getElementById('diameter_e').textContent = d;
     document.getElementById('diameter_km_e').textContent = (d / 1000).toFixed(2);
+}
+
+function showEdit(sessionId) {
+    const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
+    row.querySelectorAll('.session-view').forEach(el => el.classList.add('d-none'));
+    row.querySelectorAll('.session-edit').forEach(el => el.classList.remove('d-none'));
+    row.querySelector('.btn-edit-session').classList.remove('d-none');
+    row.querySelector('.btn-cancel-session').classList.remove('d-none');
+    row.querySelector('.btn-show-edit').classList.add('d-none');
+}
+
+function cancelEdit(sessionId) {
+    const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
+    row.querySelectorAll('.session-view').forEach(el => el.classList.remove('d-none'));
+    row.querySelectorAll('.session-edit').forEach(el => el.classList.add('d-none'));
+    row.querySelector('.btn-edit-session').classList.add('d-none');
+    row.querySelector('.btn-cancel-session').classList.add('d-none');
+    row.querySelector('.btn-show-edit').classList.remove('d-none');
+}
+
+function saveSession(sessionId) {
+    const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
+    const namaSesi = row.querySelector('input[name="nama_sesi"]').value;
+    const jamMulai = row.querySelector('input[name="jam_mulai"]').value;
+    const jamSelesai = row.querySelector('input[name="jam_selesai"]').value;
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/events/sessions/${sessionId}/update`;
+    form.innerHTML = `
+        @csrf
+        <input type="hidden" name="nama_sesi" value="${namaSesi}">
+        <input type="hidden" name="jam_mulai" value="${jamMulai}">
+        <input type="hidden" name="jam_selesai" value="${jamSelesai}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>
 @endpush

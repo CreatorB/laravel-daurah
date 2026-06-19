@@ -327,7 +327,7 @@
         <div class="action-bar-icon">
             <i class="fas fa-mosque"></i>
         </div>
-        <span class="action-bar-title">Daurah Syariyyah</span>
+        <span class="action-bar-title">{{ config('app.daurah_name') }}</span>
     </div>
     
     <div class="login-container">
@@ -370,10 +370,6 @@
                         <span>Masuk</span>
                     </button>
                 </form>
-                
-                <div class="login-footer">
-                    <p>Belum punya akun? <a href="{{ route('konfirmasi') }}">Daftar di sini</a></p>
-                </div>
             </div>
         </div>
     </div>

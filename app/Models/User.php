@@ -10,12 +10,13 @@ class User extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['nama', 'nohp', 'email', 'password', 'alamat', 'lembaga', 'role', 'domisili', 'menginap', 'agreement_accepted_at'];
+    protected $fillable = ['nama', 'nohp', 'email', 'password', 'alamat', 'lembaga', 'role', 'domisili', 'menginap', 'agreement_accepted_at', 'bukti_undangan'];
 
     protected $hidden = ['password'];
 
     protected $casts = [
-        'agreement_accepted_at' => 'datetime'
+        'agreement_accepted_at' => 'datetime',
+        'created_at' => 'datetime'
     ];
 
     public function setNohpAttribute($value)

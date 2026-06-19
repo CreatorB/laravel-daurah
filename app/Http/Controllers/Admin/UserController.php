@@ -6,15 +6,50 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    public function index()
+public function index(Request $request)
     {
-        $users = User::where('role', 'user')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = User::where('role', 'user');
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
+                  ->orWhere('nohp', 'like', '%' . $search . '%')
+                  ->orWhere('lembaga', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->has('start_date') && $request->start_date) {
+            $query->where('created_at', '>=', $request->start_date . ' 00:00:00');
+        }
+
+        if ($request->has('end_date') && $request->end_date) {
+            $query->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+
+        $sortField = match($request->sort) {
+            'nama' => ['field' => 'nama', 'direction' => 'asc'],
+            'nama_desc' => ['field' => 'nama', 'direction' => 'desc'],
+            'lembaga' => ['field' => 'lembaga', 'direction' => 'asc'],
+            'lembaga_desc' => ['field' => 'lembaga', 'direction' => 'desc'],
+            'created_at' => ['field' => 'created_at', 'direction' => 'asc'],
+            'created_at_desc' => ['field' => 'created_at', 'direction' => 'desc'],
+            default => ['field' => 'created_at', 'direction' => 'desc'],
+        };
+        
+        $users = $query->orderBy($sortField['field'], $sortField['direction'])->get();
+        
+        if ($request->has('export_csv') || $request->has('export_excel')) {
+            return $request->has('export_csv') 
+                ? $this->exportFilteredCsv($users) 
+                : $this->exportFilteredExcel($users);
+        }
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -78,11 +113,43 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diupdate!');
     }
 
-    public function destroy($id)
+public function destroy($id)
     {
         $user = User::findOrFail($id);
+        
+        if ($user->bukti_undangan) {
+            Storage::disk('public')->delete($user->bukti_undangan);
+        }
+        
+        $user->registrations()->delete();
+        $user->attendances()->delete();
         $user->delete();
+        
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus!');
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $idsInput = $request->input('ids', '[]');
+        $ids = is_array($idsInput) ? $idsInput : json_decode($idsInput, true);
+
+        if (empty($ids)) {
+            return redirect()->route('admin.users.index')->with('error', 'Tidak ada user yang dipilih!');
+        }
+
+        $users = User::whereIn('id', $ids)->get();
+        
+        foreach ($users as $user) {
+            if ($user->bukti_undangan) {
+                Storage::disk('public')->delete($user->bukti_undangan);
+            }
+            $user->registrations()->delete();
+            $user->attendances()->delete();
+            $user->delete();
+        }
+        
+        $count = count($users);
+        return redirect()->route('admin.users.index')->with('success', "$count user berhasil dihapus!");
     }
 
     public function importCsv(Request $request)
@@ -137,28 +204,112 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', $msg);
     }
 
-    public function exportCsv()
+public function exportCsv(Request $request)
     {
-        $users = User::where('role', 'user')->orderBy('nama')->get();
+        $query = User::where('role', 'user');
 
-        $filename = 'users_' . date('Ymd') . '.csv';
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
+                  ->orWhere('nohp', 'like', '%' . $search . '%')
+                  ->orWhere('lembaga', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->has('start_date') && $request->start_date) {
+            $query->where('created_at', '>=', $request->start_date . ' 00:00:00');
+        }
+
+        if ($request->has('end_date') && $request->end_date) {
+            $query->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+
+        $users = $query->orderBy('nama')->get();
+
+        return $this->exportFilteredCsv($users);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $query = User::where('role', 'user');
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
+                  ->orWhere('nohp', 'like', '%' . $search . '%')
+                  ->orWhere('lembaga', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->has('start_date') && $request->start_date) {
+            $query->where('created_at', '>=', $request->start_date . ' 00:00:00');
+        }
+
+        if ($request->has('end_date') && $request->end_date) {
+            $query->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+
+        $users = $query->orderBy('nama')->get();
+
+        return $this->exportFilteredExcel($users);
+    }
+
+    private function exportFilteredCsv($users)
+    {
+        $filename = 'users_' . date('Ymd_His') . '.csv';
         
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         
         $output = fopen('php://output', 'w');
-        fputcsv($output, ['No', 'Nama', 'No HP', 'Lembaga', 'Alamat', 'Domisili', 'Menginap']);
+        fputcsv($output, ['No', 'Nama', 'No HP', 'Email', 'Lembaga', 'Alamat', 'Domisili', 'Menginap', 'Tanggal Daftar']);
         
         $no = 1;
         foreach ($users as $user) {
             fputcsv($output, [
                 $no++,
                 $user->nama,
-                $user->nohp,
+                '+' . $user->nohp,
+                $user->email ?? '-',
                 $user->lembaga,
-                $user->alamat,
-                $user->domisili,
-                $user->menginap,
+                $user->alamat ?? '-',
+                $user->domisili ?? '-',
+                $user->menginap == 'ya' ? 'Ya' : 'Tidak',
+                $user->created_at->format('Y-m-d H:i:s'),
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    private function exportFilteredExcel($users)
+    {
+        $filename = 'users_' . date('Ymd_His') . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        
+        fputcsv($output, ['No', 'Nama', 'No HP', 'Email', 'Lembaga', 'Alamat', 'Domisili', 'Menginap', 'Tanggal Daftar']);
+        
+        $no = 1;
+        foreach ($users as $user) {
+            fputcsv($output, [
+                $no++,
+                $user->nama,
+                '+' . $user->nohp,
+                $user->email ?? '-',
+                $user->lembaga,
+                $user->alamat ?? '-',
+                $user->domisili ?? '-',
+                $user->menginap == 'ya' ? 'Ya' : 'Tidak',
+                $user->created_at->format('Y-m-d H:i:s'),
             ]);
         }
         

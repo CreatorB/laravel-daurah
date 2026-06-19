@@ -38,7 +38,7 @@
                     <div class="col-6 col-md-3">
                         <div class="text-center" style="background:rgba(255,255,255,0.15); border-radius:12px; padding:10px 6px;">
                             <i class="fas fa-phone-alt text-white mb-1" style="font-size:1.1rem;"></i>
-                            <div class="text-white fw-bold" style="font-size:clamp(0.8rem, 3vw, 1rem); word-break:break-all;">+{{ $user->nohp }}</div>
+                            <a href="https://wa.me/{{ str_replace('0', '62', $user->nohp) }}" target="_blank" class="text-white fw-bold text-decoration-none" style="font-size:clamp(0.8rem, 3vw, 1rem); word-break:break-all;">{{ $user->nohp }}</a>
                             <div class="text-white" style="font-size:0.65rem; opacity:0.8;">No. WhatsApp</div>
                         </div>
                     </div>
@@ -203,6 +203,11 @@
             <div class="alert mb-0" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; border:none;">
                 <i class="fas fa-bell me-1"></i>Harap bersiap dan hadir tepat waktu, inshaAllah.
             </div>
+            @if($currentEvent->group_link)
+            <a href="{{ $currentEvent->group_link }}" target="_blank" class="btn btn-success mt-3 w-100" style="border-radius:12px; font-weight:600;">
+                <i class="fab fa-whatsapp me-2"></i>Bergabung Grup WhatsApp
+            </a>
+            @endif
         </div>
     </div>
     @endif

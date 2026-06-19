@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'daurah_name' => env('DAURAH_NAME', 'Daurah Syariyyah'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

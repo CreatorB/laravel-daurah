@@ -320,20 +320,106 @@
             }
         }
     </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded');
+        
+        const form = document.querySelector('form[action="{{ route("konfirmasi") }}"]');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                console.log('Form submitting...');
+                const fileInput = document.getElementById('bukti_undangan');
+                if (fileInput && fileInput.files.length > 0) {
+                    console.log('File selected:', fileInput.files[0].name, fileInput.files[0].size);
+                }
+            });
+        }
+        
+        const fileInput = document.getElementById('bukti_undangan');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                console.log('File selected:', file.name, file.size, file.type);
+                
+                const maxSize = 1024 * 1024;
+                if (file.size <= maxSize) {
+                    console.log('File already small enough');
+                    return;
+                }
+                
+                if (!file.type.match(/^image\/(jpeg|png|jpg)$/)) {
+                    console.log('Not an image or PDF - skipping compression');
+                    return;
+                }
+                
+                try {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.onload = function() {
+                            try {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                
+                                let width = img.width;
+                                let height = img.height;
+                                const maxDim = 1200;
+                                
+                                if (width > maxDim || height > maxDim) {
+                                    if (width > height) {
+                                        height = Math.round((height * maxDim) / width);
+                                        width = maxDim;
+                                    } else {
+                                        width = Math.round((width * maxDim) / height);
+                                        height = maxDim;
+                                    }
+                                }
+                                
+                                canvas.width = width;
+                                canvas.height = height;
+                                ctx.drawImage(img, 0, 0, width, height);
+                                
+                                canvas.toBlob(function(blob) {
+                                    if (blob && blob.size < file.size) {
+                                        const newFile = new File([blob], file.name, { type: blob.type });
+                                        const dataTransfer = new DataTransfer();
+                                        dataTransfer.items.add(newFile);
+                                        fileInput.files = dataTransfer.files;
+                                        console.log('File compressed:', blob.size);
+                                    }
+                                }, 'image/jpeg', 0.8);
+                            } catch (err) {
+                                console.error('Compression error:', err);
+                            }
+                        };
+                        img.onerror = function() {
+                            console.error('Image load error');
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                } catch (err) {
+                    console.error('File read error:', err);
+                }
+            });
+        }
+    });
+    </script>
 </head>
 <body>
     <div class="action-bar">
         <div class="action-bar-icon">
             <i class="fas fa-mosque"></i>
         </div>
-        <span class="action-bar-title">Daurah Syariyyah</span>
+        <span class="action-bar-title">{{ config('app.daurah_name') }}</span>
     </div>
     
     <div class="form-container">
         <div class="form-card">
             <div class="form-header">
                 <h1><i class="fas fa-user-plus me-2"></i>Konfirmasi Pendaftaran</h1>
-                <p>Bergabunglah dengan komunitas Daurah Syariyyah</p>
+                <p>Konfirmasi ini hanya dikhususkan bagi yang menerima undangan</p>
             </div>
             
             <div class="form-body">
@@ -343,7 +429,7 @@
                 </div>
                 @endif
                 
-                <form action="{{ route('konfirmasi') }}" method="POST">
+                <form action="{{ route('konfirmasi') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
                     <div class="row">
@@ -360,10 +446,13 @@
                         
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Lembaga <span class="text-muted">(opsional)</span></label>
+                                <label class="form-label">Lembaga <span class="text-danger">*</span></label>
                                 <input type="text" name="lembaga" class="form-control @error('lembaga') is-invalid @enderror" 
-                                    value="{{ old('lembaga', 'PRIBADI') }}" placeholder="Nama lembaga atau PRIBADI">
+                                    value="{{ old('lembaga', 'PRIBADI') }}" required placeholder="Nama lembaga atau PRIBADI">
                                 <span class="help-text">Jika tidak mewakili lembaga, isi dengan "PRIBADI"</span>
+                                @error('lembaga')
+                                <div class="text-danger mt-1" style="font-size: 11px;">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         
@@ -395,10 +484,25 @@
                                     <option value="ya" {{ old('menginap') == 'ya' ? 'selected' : '' }}>Ya</option>
                                     <option value="tidak" {{ old('menginap') == 'tidak' ? 'selected' : '' }}>Tidak</option>
                                 </select>
+                                <span class="help-text">Tempat menginap di Masjid bukan di hotel</span>
+                                @error('menginap')
+                                <div class="text-danger mt-1" style="font-size: 11px;">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         
                         <div class="col-12">
+                            <div class="form-group">
+                                <label class="form-label">Bukti Undangan <span class="text-danger">*</span></label>
+                                <input type="file" name="bukti_undangan" id="bukti_undangan" class="form-control @error('bukti_undangan') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <span class="help-text">Upload bukti undangan (PDF/JPG/PNG, maks 1MB). Gambar akan dikompres otomatis.</span>
+                                @error('bukti_undangan')
+                                <div class="text-danger mt-1" style="font-size: 11px;">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+<div class="col-12">
                             <div class="agreement-box">
                                 <div class="form-check">
                                     <input type="checkbox" name="agreement" id="agreement" class="form-check-input @error('agreement') is-invalid @enderror"
@@ -409,22 +513,6 @@
                                 </div>
                                 <div class="agreement-text">
                                     <p>Dengan ini saya menyatakan kesediaan untuk mengikuti seluruh rangkaian acara Daurah Syariyyah dengan penuh ketertiban, kedisiplinan, dan ketaatan kepada seluruh aturan yang berlaku.</p>
-            
-                                    <p><strong>Saya berjanji:</strong></p>
-                                    <ol>
-                                        <li>Menghadiri seluruh sesi yang dijadwalkan dengan tepat waktu.</li>
-                                        <li>Mematuhi ketentuan dan tata tertib yang berlaku di lokasi acara.</li>
-                                        <li>Menjaga kekhusyuan dan ketenangan selama acara berlangsung.</li>
-                                        <li>Berperilaku sopan dan menjaga nama baik Daurah Syariyyah.</li>
-                                        <li>Menghormati sesama peserta, pemateri, dan panitia.</li>
-                                        <li>Menjaga kebersihan lingkungan acara.</li>
-                                        <li>Berpartisipasi aktif dalam setiap sesi yang diadakan.</li>
-                                        <li>Mematuhi aturan terkait penggunaan perangkat elektronik selama acara.</li>
-                                        <li>Memberikan konfirmasi apabila berhalangan hadir dengan alasan yang dapat dipertanggungjawabkan.</li>
-                                        <li>Berjaga-jaga untuk mengikuti perintah Allah dan sunnah Rasulullah shallallahu alaihi wasallam dalam setiap aktivitas.</li>
-                                    </ol>
-                                    
-                                    <p class="mt-2">Semoga Allah ta'ala menerima keikutsertaan kita dan memberikan manfaat yang besar bagi kita semua. Aamiin Ya Rabbal Alamin.</p>
                                 </div>
                             </div>
                             @error('agreement')

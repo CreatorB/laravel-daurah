@@ -14,6 +14,7 @@ use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\QrController;
 use App\Http\Controllers\ProsesScanController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\FileController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -26,6 +27,8 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/konfirmasi', [KonfirmasiController::class, 'showForm'])->name('konfirmasi');
 Route::post('/konfirmasi', [KonfirmasiController::class, 'store']);
 
+Route::get('/file/bukti-undangan/{filename}', [FileController::class, 'serveBuktiUndangan'])->name('file.bukti-undangan');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     
@@ -37,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/events/{id}/delete', [EventController::class, 'destroy'])->name('admin.events.destroy');
     
     Route::post('/admin/events/{id}/sessions', [EventController::class, 'addSession'])->name('admin.events.sessions.store');
+    Route::post('/admin/events/sessions/{id}/update', [EventController::class, 'updateSession'])->name('admin.events.sessions.update');
     Route::post('/admin/events/sessions/{id}/delete', [EventController::class, 'deleteSession'])->name('admin.events.sessions.delete');
     
     Route::post('/admin/events/{id}/invite', [EventController::class, 'inviteUsers'])->name('admin.events.invite');
@@ -50,14 +54,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/konfirmasi/{eventId}/acc-all', [AdminKonfirmasiController::class, 'accAll'])->name('admin.konfirmasi.acc-all');
     Route::get('/admin/konfirmasi/{eventId}/export', [AdminKonfirmasiController::class, 'exportCsv'])->name('admin.konfirmasi.export');
     
-    Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::post('/admin/users/bulk-delete', [UserController::class, 'destroyBulk'])->name('admin.users.bulk-delete');
     Route::get('/admin/users/{id}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::post('/admin/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/users/{id}/delete', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/admin/users/import', [UserController::class, 'importCsv'])->name('admin.users.import');
     Route::get('/admin/users/export', [UserController::class, 'exportCsv'])->name('admin.users.export');
+    Route::get('/admin/users/export-excel', [UserController::class, 'exportExcel'])->name('admin.users.export-excel');
     
     Route::get('/admin/history', [HistoryController::class, 'index'])->name('admin.history');
     
@@ -73,7 +79,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/monitor/{eventId}/qr', [MonitorController::class, 'generateQr'])->name('monitor.qr');
     Route::get('/monitor/{eventId}/session', [MonitorController::class, 'getSessionInfo'])->name('monitor.session');
     
-    Route::get('/download-qr/{eventId}', [QrController::class, 'download'])->name('download.qr');
+Route::get('/download-qr/{eventId}', [QrController::class, 'download'])->name('download.qr');
     
 Route::get('/proses-scan/{eventId}', [ProsesScanController::class, 'proses'])->name('proses.scan');
 });
@@ -87,4 +93,5 @@ Route::prefix('maintenance')->group(function () {
     Route::get('/migrate-rollback', [MaintenanceController::class, 'migrateRollback']);
     Route::get('/migrate-status', [MaintenanceController::class, 'migrateStatus']);
     Route::get('/db-status', [MaintenanceController::class, 'dbStatus']);
+    Route::get('/storage-link', [MaintenanceController::class, 'storageLink']);
 });

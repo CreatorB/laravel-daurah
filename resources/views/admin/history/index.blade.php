@@ -77,7 +77,7 @@
                             </td>
                             <td>
                                 <div class="fw-bold">{{ $att->user->nama }}</div>
-                                <small class="text-muted"><i class="fa fa-phone me-1"></i>+{{ $att->user->nohp }}</small>
+                                <small class="text-muted"><i class="fa fa-phone me-1"></i><a href="https://wa.me/{{ str_replace('0', '62', $att->user->nohp) }}" target="_blank" class="text-success text-decoration-none">{{ $att->user->nohp }}</a></small>
                             </td>
                             <td>{{ $att->user->lembaga }}</td>
                             <td>
