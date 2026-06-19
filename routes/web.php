@@ -58,7 +58,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/absensi', [AbsensiController::class, 'index'])->name('admin.absensi.index');
     Route::get('/admin/absensi/{eventId}', [AbsensiController::class, 'index'])->name('admin.absensi.event');
     Route::get('/admin/absensi/{eventId}/export-csv', [AbsensiController::class, 'exportCsv'])->name('admin.absensi.export-csv');
-    Route::get('/admin/absensi/{eventId}/export-excel', [AbsensiController::class, 'exportExcel'])->name('admin.absensi.export-excel');
 
 Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [UserController::class, 'create'])->name('admin.users.create');

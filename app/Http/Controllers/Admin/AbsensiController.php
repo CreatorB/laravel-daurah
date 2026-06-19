@@ -7,8 +7,6 @@ use App\Models\Attendance;
 use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class AbsensiController extends Controller
 {
@@ -43,78 +41,42 @@ class AbsensiController extends Controller
         $callback = function () use ($sessions) {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            fputcsv($file, ['No', 'Sesi', 'Jam Sesi', 'Nama', 'Lembaga', 'Domisili', 'Waktu Absen', 'Konfirmasi Materi']);
 
-            $no = 1;
+            $header = ['No', 'Nama', 'Lembaga', 'Domisili'];
+            foreach ($sessions as $sessionRow) {
+                $header[] = $sessionRow['nama_sesi'] . ' (' . $sessionRow['jam_range'] . ')';
+            }
+            fputcsv($file, $header);
+
+            $users = [];
             foreach ($sessions as $sessionRow) {
                 foreach ($sessionRow['attendances'] as $row) {
-                    fputcsv($file, [
-                        $no++,
-                        $sessionRow['nama_sesi'],
-                        $sessionRow['jam_range'],
-                        $row['nama'],
-                        $row['lembaga'],
-                        $row['domisili'],
-                        $row['waktu_scan_readable'],
-                        $row['materi_confirmed'] ? 'Sudah' : 'Belum',
-                    ]);
+                    $userId = $row['user_id'];
+                    if (! isset($users[$userId])) {
+                        $users[$userId] = [
+                            'nama' => $row['nama'],
+                            'lembaga' => $row['lembaga'],
+                            'domisili' => $row['domisili'],
+                            'sesi' => [],
+                        ];
+                    }
+                    $users[$userId]['sesi'][$sessionRow['id']] = $row['waktu_scan_readable'];
                 }
+            }
+
+            $no = 1;
+            foreach ($users as $user) {
+                $line = [$no++, $user['nama'], $user['lembaga'], $user['domisili']];
+                foreach ($sessions as $sessionRow) {
+                    $line[] = $user['sesi'][$sessionRow['id']] ?? '-';
+                }
+                fputcsv($file, $line);
             }
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
-    }
-
-    public function exportExcel($eventId)
-    {
-        $event = Event::with('sessions')->findOrFail($eventId);
-        $sessions = $this->buildSessionRows($event);
-
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Absensi');
-
-        $sheet->fromArray(
-            ['No', 'Sesi', 'Jam Sesi', 'Nama', 'Lembaga', 'Domisili', 'Waktu Absen', 'Konfirmasi Materi'],
-            null,
-            'A1'
-        );
-        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
-
-        $rowIndex = 2;
-        $no = 1;
-        foreach ($sessions as $sessionRow) {
-            foreach ($sessionRow['attendances'] as $row) {
-                $sheet->fromArray([
-                    $no++,
-                    $sessionRow['nama_sesi'],
-                    $sessionRow['jam_range'],
-                    $row['nama'],
-                    $row['lembaga'],
-                    $row['domisili'],
-                    $row['waktu_scan_readable'],
-                    $row['materi_confirmed'] ? 'Sudah' : 'Belum',
-                ], null, 'A' . $rowIndex);
-                $rowIndex++;
-            }
-        }
-
-        foreach (range('A', 'H') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $slug = Str::slug($event->nama_event);
-        $filename = 'absensi_' . $slug . '_' . date('Ymd') . '.xlsx';
-
-        $writer = new Xlsx($spreadsheet);
-
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
     }
 
     private function buildSessionRows(Event $event)
@@ -136,6 +98,7 @@ class AbsensiController extends Controller
                     $waktu = $att->waktu_scan ? Carbon::parse($att->waktu_scan)->setTimezone('Asia/Jakarta') : null;
 
                     return [
+                        'user_id' => $att->user_id,
                         'nama' => $att->user->nama ?? '-',
                         'lembaga' => $att->user->lembaga ?? 'PRIBADI',
                         'domisili' => $att->user->domisili ?? '-',

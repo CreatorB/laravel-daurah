@@ -11,9 +11,6 @@
         <a href="{{ route('admin.absensi.export-csv', $event->id) }}" class="btn btn-outline-secondary btn-sm">
             <i class="fas fa-file-csv me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
         </a>
-        <a href="{{ route('admin.absensi.export-excel', $event->id) }}" class="btn btn-outline-success btn-sm">
-            <i class="fas fa-file-excel me-1"></i><span class="d-none d-sm-inline">Export Excel</span>
-        </a>
     </div>
     @endif
 
