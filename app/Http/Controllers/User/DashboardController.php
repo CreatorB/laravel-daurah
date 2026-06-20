@@ -91,7 +91,6 @@ class DashboardController extends Controller
         $attendances = Attendance::where('user_id', $userId)
             ->with(['event', 'session'])
             ->orderBy('waktu_scan', 'desc')
-            ->limit(10)
             ->get();
 
         $allAttendances = Attendance::where('user_id', $userId)->orderBy('waktu_scan')->get();
@@ -99,8 +98,21 @@ class DashboardController extends Controller
             ->map(fn($group) => $group->contains('materi_confirmed', true));
         $eventFirstAttendanceId = $allAttendances->groupBy('event_id')
             ->map(fn($group) => $group->first()->id);
+        $eventLastAttendanceId = $allAttendances->groupBy('event_id')
+            ->map(fn($group) => $group->sortByDesc('waktu_scan')->first()->id);
 
-        $certificates = Event::whereNotNull('cert_template')
+        $eventSessionTotals = Event::whereIn('id', $allAttendances->pluck('event_id')->unique())
+            ->with('sessions')
+            ->get()
+            ->mapWithKeys(fn($event) => [$event->id => $event->sessions->count()]);
+        $eventAttendedSessionCounts = $allAttendances->groupBy('event_id')
+            ->map(fn($group) => $group->pluck('session_id')->unique()->count());
+        $eventAllSessionsAttended = $eventSessionTotals->mapWithKeys(function($total, $eventId) use ($eventAttendedSessionCounts) {
+            return [$eventId => $total > 0 && ($eventAttendedSessionCounts[$eventId] ?? 0) >= $total];
+        });
+
+        $certificates = Event::where('cert_enabled', true)
+            ->whereNotNull('cert_template')
             ->where('cert_template', '!=', '')
             ->whereHas('attendances', function($q) use ($userId) {
                 $q->where('user_id', $userId);
@@ -108,7 +120,7 @@ class DashboardController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        return view('user.dashboard', compact('user', 'myEvents', 'activeSession', 'nextSession', 'currentEvent', 'attendances', 'certificates', 'eventMateriConfirmed', 'eventFirstAttendanceId'));
+        return view('user.dashboard', compact('user', 'myEvents', 'activeSession', 'nextSession', 'currentEvent', 'attendances', 'certificates', 'eventMateriConfirmed', 'eventFirstAttendanceId', 'eventLastAttendanceId', 'eventAllSessionsAttended'));
     }
 
     public function absen(Request $request)

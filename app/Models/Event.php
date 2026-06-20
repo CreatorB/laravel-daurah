@@ -10,12 +10,12 @@ class Event extends Model
     
     public $timestamps = false;
 
-    protected $fillable = ['nama_event', 'tanggal', 'qr_mode', 'cert_template', 'cert_font', 'cert_font_size', 'cert_font_color', 'radius_lat', 'radius_lng', 'radius_active', 'radius_meters', 'group_link', 'material_type', 'auto_confirm', 'auto_invite'];
+    protected $fillable = ['nama_event', 'tanggal', 'qr_mode', 'cert_enabled', 'cert_template', 'cert_font', 'cert_font_size', 'cert_font_color', 'radius_lat', 'radius_lng', 'radius_active', 'radius_meters', 'group_link', 'material_type', 'auto_confirm', 'auto_invite'];
 
     protected $hidden = [''];
 
     protected $casts = [
-        'radius_active' => 'boolean', 'auto_confirm' => 'boolean', 'auto_invite' => 'boolean', 'radius_lat' => 'decimal:8', 'radius_lng' => 'decimal:8', 'radius_meters' => 'integer'
+        'radius_active' => 'boolean', 'auto_confirm' => 'boolean', 'auto_invite' => 'boolean', 'cert_enabled' => 'boolean', 'radius_lat' => 'decimal:8', 'radius_lng' => 'decimal:8', 'radius_meters' => 'integer'
     ];
 
     public function sessions()

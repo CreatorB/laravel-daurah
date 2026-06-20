@@ -104,7 +104,7 @@
 
     {{-- ===== HIGHLIGHT GRUP LINK (untuk peserta yang sudah konfirm) ===== --}}
     @php
-    $confirmedWithGroup = $myEvents->filter(fn($r) => $r->status === 'confirmed' && !empty($r->event->group_link))->first();
+    $confirmedWithGroup = $myEvents->filter(fn($r) => ($r->status === 'confirmed' || ($r->status === null && $r->event->auto_invite)) && !empty($r->event->group_link))->first();
     @endphp
     @if($confirmedWithGroup)
     <div style="background: linear-gradient(135deg, #065f46, #059669, #34d399); border-radius:16px; padding:16px 18px; margin-bottom:16px; box-shadow: 0 8px 25px rgba(16,185,129,0.35);">
@@ -238,7 +238,7 @@
                             <h6 class="mb-1 fw-semibold" style="font-size:0.9rem;">{{ $att->session->nama_sesi ?? 'Sesi' }}</h6>
                             <small class="text-muted" style="font-size:0.78rem;">
                                 {{ $att->event->nama_event ?? 'Event' }} &bull;
-                                {{ \Carbon\Carbon::parse($att->waktu_scan)->locale('id')->isoFormat('D MMM Y, HH:mm') }}
+                                {{ \Carbon\Carbon::parse($att->waktu_scan)->setTimezone('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm') }} WIB
                             </small>
                         </div>
                         <div class="d-flex flex-column align-items-end gap-1">
@@ -262,6 +262,17 @@
                                     <i class="fas fa-book me-1"></i>Ambil Materi
                                 </button>
                             </form>
+                            @endif
+
+                            @php
+                            $rowIsLastAttendance = ($eventLastAttendanceId[$att->event_id] ?? null) === $att->id;
+                            $rowAllSessionsAttended = $eventAllSessionsAttended[$att->event_id] ?? false;
+                            $rowHasCertTemplate = $att->event && $att->event->cert_enabled && !empty($att->event->cert_template);
+                            @endphp
+                            @if($rowIsLastAttendance && $rowAllSessionsAttended && $rowHasCertTemplate)
+                            <a href="{{ route('certificate', ['event_id' => $att->event_id]) }}" class="badge border-0 text-decoration-none" style="background:linear-gradient(135deg,#7c3aed,#a855f7); font-size:0.68rem;">
+                                <i class="fas fa-certificate me-1"></i>Generate Sertifikat
+                            </a>
                             @endif
                         </div>
                     </div>

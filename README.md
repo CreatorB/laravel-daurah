@@ -157,6 +157,10 @@ php artisan serve
 
 Access the application at `http://localhost:8000`.
 
+```bash
+C:\laragon\bin\php\php-8.2.27-nts-Win32-vs16-x64\php.exe artisan serve --port 8001
+```
+
 ---
 
 ## Configuration

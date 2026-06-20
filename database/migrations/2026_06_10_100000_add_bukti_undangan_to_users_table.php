@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('bukti_undangan', 255)->nullable()->after('menginap');
-        });
+        if (!Schema::hasColumn('users', 'bukti_undangan')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('bukti_undangan', 255)->nullable()->after('menginap');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('bukti_undangan');
-        });
+        if (Schema::hasColumn('users', 'bukti_undangan')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('bukti_undangan');
+            });
+        }
     }
 };

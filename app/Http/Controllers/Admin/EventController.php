@@ -39,6 +39,11 @@ class EventController extends Controller
             'material_type' => 'required|in:per_session,once,none',
             'auto_confirm' => 'nullable|boolean',
             'auto_invite' => 'nullable|boolean',
+            'cert_enabled' => 'nullable|boolean',
+            'cert_template' => 'nullable|image|max:15360',
+            'cert_font' => 'nullable|file|mimes:ttf,otf|max:2048',
+            'cert_font_size' => 'nullable|integer|min:1',
+            'cert_font_color' => 'nullable|string|max:20',
             'sessions' => 'required|array|min:1',
             'sessions.*.nama_sesi' => 'required|string|max:255',
             'sessions.*.jam_mulai' => 'required',
@@ -46,7 +51,7 @@ class EventController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             $event = Event::create([
                 'nama_event' => $request->nama_event,
@@ -60,7 +65,12 @@ class EventController extends Controller
                 'material_type' => $request->material_type,
                 'auto_confirm' => $request->auto_confirm ? 1 : 0,
                 'auto_invite' => $request->auto_invite ? 1 : 0,
+                'cert_enabled' => $request->cert_enabled ? 1 : 0,
+                'cert_font_size' => $request->cert_font_size ?: 30,
+                'cert_font_color' => $request->cert_font_color ?: '#000000',
             ]);
+
+            $this->storeCertFiles($request, $event);
 
             foreach ($request->sessions as $session) {
                 EventSession::create([
@@ -88,6 +98,7 @@ class EventController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Event store failed: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
@@ -117,6 +128,11 @@ class EventController extends Controller
             'material_type' => 'required|in:per_session,once,none',
             'auto_confirm' => 'nullable|boolean',
             'auto_invite' => 'nullable|boolean',
+            'cert_enabled' => 'nullable|boolean',
+            'cert_template' => 'nullable|image|max:15360',
+            'cert_font' => 'nullable|file|mimes:ttf,otf|max:2048',
+            'cert_font_size' => 'nullable|integer|min:1',
+            'cert_font_color' => 'nullable|string|max:20',
         ]);
 
         $event->update([
@@ -131,16 +147,51 @@ class EventController extends Controller
             'material_type' => $request->material_type,
             'auto_confirm' => $request->auto_confirm ? 1 : 0,
             'auto_invite' => $request->auto_invite ? 1 : 0,
+            'cert_enabled' => $request->cert_enabled ? 1 : 0,
+            'cert_font_size' => $request->cert_font_size ?: ($event->cert_font_size ?: 30),
+            'cert_font_color' => $request->cert_font_color ?: ($event->cert_font_color ?: '#000000'),
         ]);
+
+        $this->storeCertFiles($request, $event);
 
         return redirect()->back()->with('success', 'Event berhasil diupdate!');
     }
 
+    private function storeCertFiles(Request $request, Event $event): void
+    {
+        $eventName = Str::slug($event->nama_event);
+
+        if ($request->hasFile('cert_template')) {
+            if ($event->cert_template) {
+                $oldPath = str_replace('/storage/', '', $event->cert_template);
+                \Storage::disk('public')->delete($oldPath);
+            }
+            $ext = $request->file('cert_template')->getClientOriginalExtension();
+            $filename = $eventName . '_template.' . $ext;
+            $path = $request->file('cert_template')->storeAs('certificates', $filename, 'public');
+            $event->update(['cert_template' => '/storage/' . $path]);
+        }
+
+        if ($request->hasFile('cert_font')) {
+            if ($event->cert_font) {
+                $oldPath = str_replace('/storage/', '', $event->cert_font);
+                \Storage::disk('public')->delete($oldPath);
+            }
+            $ext = $request->file('cert_font')->getClientOriginalExtension();
+            $path = $request->file('cert_font')->storeAs('certificates', $eventName . '_font.' . $ext, 'public');
+            $event->update(['cert_font' => '/storage/' . $path]);
+        }
+    }
+
     public function destroy($id)
     {
-        $event = Event::findOrFail($id);
+        $event = Event::with(['sessions', 'registrations', 'attendances', 'materials'])->findOrFail($id);
+        $event->attendances()->delete();
+        $event->sessions()->delete();
+        $event->registrations()->delete();
+        $event->materials()->delete();
         $event->delete();
- return redirect()->route('admin.events.index')->with('success', 'Event berhasil dihapus!');
+        return redirect()->route('admin.events.index')->with('success', 'Event berhasil dihapus!');
     }
 
     public function addSession(Request $request, $id)

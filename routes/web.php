@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\KonfirmasiController as AdminKonfirmasiController
 use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\HistoryController;
+use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\MonitorController;
@@ -71,7 +72,18 @@ Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.
     Route::get('/admin/users/export-excel', [UserController::class, 'exportExcel'])->name('admin.users.export-excel');
     
     Route::get('/admin/history', [HistoryController::class, 'index'])->name('admin.history');
-    
+
+    Route::get('/admin/maintenance', [AdminMaintenanceController::class, 'index'])->name('admin.maintenance.index');
+    Route::get('/admin/maintenance/clear-cache', [AdminMaintenanceController::class, 'clearCache'])->name('admin.maintenance.clear-cache');
+    Route::get('/admin/maintenance/clear-view', [AdminMaintenanceController::class, 'clearView'])->name('admin.maintenance.clear-view');
+    Route::get('/admin/maintenance/optimize', [AdminMaintenanceController::class, 'optimize'])->name('admin.maintenance.optimize');
+    Route::get('/admin/maintenance/clear-all', [AdminMaintenanceController::class, 'clearAll'])->name('admin.maintenance.clear-all');
+    Route::get('/admin/maintenance/db-status', [AdminMaintenanceController::class, 'dbStatus'])->name('admin.maintenance.db-status');
+    Route::get('/admin/maintenance/migrate', [AdminMaintenanceController::class, 'migrate'])->name('admin.maintenance.migrate');
+    Route::get('/admin/maintenance/storage-link', [AdminMaintenanceController::class, 'storageLink'])->name('admin.maintenance.storage-link');
+    Route::post('/admin/maintenance/reset-db', [AdminMaintenanceController::class, 'resetDb'])->name('admin.maintenance.reset-db');
+    Route::post('/admin/maintenance/seed-admin', [AdminMaintenanceController::class, 'seedAdmin'])->name('admin.maintenance.seed-admin');
+
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
     Route::post('/dashboard/absen', [UserDashboardController::class, 'absen'])->name('user.absen');
     Route::post('/dashboard/materi', [UserDashboardController::class, 'konfirmasiMateri'])->name('user.materi');

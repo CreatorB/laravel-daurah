@@ -19,8 +19,20 @@
     @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-    
-<form action="{{ route('admin.events.update', $event->id) }}" method="POST">
+    @if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+<form action="{{ route('admin.events.update', $event->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')
         
@@ -107,6 +119,54 @@
                     <option value="once" {{ $event->material_type == 'once' ? 'selected' : '' }}>Sekali (di awal event)</option>
                     <option value="per_session" {{ $event->material_type == 'per_session' ? 'selected' : '' }}>Per Sesi</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Sertifikat</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="cert_enabled" id="cert_enabled_e" class="form-check-input" value="1" {{ $event->cert_enabled ? 'checked' : '' }} onchange="document.getElementById('cert-settings-e').classList.toggle('d-none', !this.checked)">
+                            <label class="form-check-label" for="cert_enabled_e">Aktifkan Sertifikat</label>
+                        </div>
+                        <small class="text-muted">Jika diaktifkan, peserta yang hadir lengkap di semua sesi dapat generate sertifikat dari riwayat kehadirannya.</small>
+                    </div>
+                    <div id="cert-settings-e" class="row g-3 {{ $event->cert_enabled ? '' : 'd-none' }}">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Template Sertifikat (gambar)</label>
+                            <input type="file" name="cert_template" id="cert_template_e" class="form-control" accept="image/*">
+                            @if(!empty($event->cert_template))
+                            @php
+                            $certPath = str_replace('/storage/', '', $event->cert_template);
+                            $certVersion = \Illuminate\Support\Facades\Storage::disk('public')->exists($certPath)
+                                ? \Illuminate\Support\Facades\Storage::disk('public')->lastModified($certPath)
+                                : time();
+                            @endphp
+                            <div class="mt-2">
+                                <img src="{{ $event->cert_template }}?v={{ $certVersion }}" alt="Template sertifikat" style="max-width:220px; max-height:140px; object-fit:contain; border:1px solid #e0f2fe;">
+                                <small class="text-success d-block mt-1"><i class="fas fa-check"></i> <a href="{{ $event->cert_template }}?v={{ $certVersion }}" target="_blank">Lihat ukuran penuh</a></small>
+                            </div>
+                            @endif
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Font Sertifikat (opsional)</label>
+                            <input type="file" name="cert_font" class="form-control" accept=".ttf,.otf">
+                            @if(!empty($event->cert_font))
+                            <small class="text-success d-block mt-1"><i class="fas fa-check"></i> Sudah ada: <a href="{{ $event->cert_font }}" target="_blank">Lihat font</a></small>
+                            @endif
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Ukuran Font</label>
+                            <input type="number" name="cert_font_size" class="form-control" value="{{ old('cert_font_size', $event->cert_font_size ?? 30) }}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Warna Font</label>
+                            <input type="color" name="cert_font_color" class="form-control form-control-color" value="{{ old('cert_font_color', $event->cert_font_color ?? '#000000') }}">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -204,6 +264,70 @@
 </div>
 @push('scripts')
 <script>
+function attachCertAutoCompress(inputId) {
+    const fileInput = document.getElementById(inputId);
+    if (!fileInput) return;
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const maxSize = 8 * 1024 * 1024;
+        if (file.size <= maxSize) return;
+        if (!file.type.match(/^image\/(jpeg|png|jpg|webp)$/)) return;
+
+        try {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 2200;
+
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob(function(blob) {
+                            if (blob && blob.size < file.size) {
+                                const newFile = new File([blob], file.name, { type: blob.type });
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(newFile);
+                                fileInput.files = dataTransfer.files;
+                            }
+                        }, 'image/jpeg', 0.85);
+                    } catch (err) {
+                        console.error('Compression error:', err);
+                    }
+                };
+                img.onerror = function() {
+                    console.error('Image load error');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        } catch (err) {
+            console.error('File read error:', err);
+        }
+    });
+}
+attachCertAutoCompress('cert_template_e');
+
 function updateDiameterEdit() {
     const r = parseFloat(document.getElementById('radius_meters_e').value) || 0;
     const d = r * 2;
