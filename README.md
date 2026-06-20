@@ -1,5 +1,7 @@
 # Daurah Syariyyah — Participant Management System
 
+[DAURAH.SYATHIBY.ID](https://daurah.syathiby.id)
+
 A full-featured Laravel-based participant management system for Islamic study events (Daurah). Originally migrated from a pure PHP application, this system streamlines event registration, geolocation-based attendance tracking, QR code authentication, WhatsApp notifications, and certificate generation for study event organizers.
 
 ---

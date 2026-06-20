@@ -534,5 +534,7 @@
             </div>
         </div>
     </div>
+    
+    @include('layouts.partials.footer-white')
 </body>
 </html>
