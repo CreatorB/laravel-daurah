@@ -23,6 +23,9 @@
             <div style="background: linear-gradient(135deg, #0369a1, #0ea5e9, #38bdf8); padding:20px 20px 0 20px;">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                     <div>
+                        <p class="mb-1 text-white" style="font-size:0.85rem; opacity:0.9;">
+                            <i class="fas fa-clock me-1"></i>{{ \Carbon\Carbon::now('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM YYYY') }} - {{ \Carbon\Carbon::now('Asia/Jakarta')->format('H:i') }} WIB
+                        </p>
                         <p class="mb-1 text-white" style="font-size:0.78rem; opacity:0.85; letter-spacing:1px; text-transform:uppercase;">Assalamu'alaikum</p>
                         <h2 class="text-white fw-bold mb-0" style="font-size:clamp(1.4rem, 5vw, 2.2rem); line-height:1.2;">{{ $user->nama }}</h2>
                     </div>
@@ -101,7 +104,7 @@
 
     {{-- ===== HIGHLIGHT GRUP LINK (untuk peserta yang sudah konfirm) ===== --}}
     @php
-    $confirmedWithGroup = $myEvents->filter(fn($r) => $r->status === 'confirmed' && !empty($r->event->group_link))->first();
+    $confirmedWithGroup = $myEvents->filter(fn($r) => ($r->status === 'confirmed' || ($r->status === null && $r->event->auto_invite)) && !empty($r->event->group_link))->first();
     @endphp
     @if($confirmedWithGroup)
     <div style="background: linear-gradient(135deg, #065f46, #059669, #34d399); border-radius:16px; padding:16px 18px; margin-bottom:16px; box-shadow: 0 8px 25px rgba(16,185,129,0.35);">
@@ -168,8 +171,11 @@
             @if($currentEvent->material_type !== 'none')
             @php
             $attendance = $attendances->where('session_id', $activeSession->id)->first();
+            $eventConfirmed = $eventMateriConfirmed[$currentEvent->id] ?? false;
+            $isFirstAttendance = $attendance && ($eventFirstAttendanceId[$currentEvent->id] ?? null) === $attendance->id;
+            $canConfirmHere = $attendance && ($currentEvent->material_type === 'per_session' || $isFirstAttendance);
             @endphp
-            @if($attendance && !$attendance->materi_confirmed)
+            @if($attendance && $canConfirmHere && !$attendance->materi_confirmed && !$eventConfirmed)
             <form action="{{ route('user.materi') }}" method="POST" class="mt-3">
                 @csrf
                 <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
@@ -177,7 +183,7 @@
                     <i class="fas fa-book me-2"></i>Konfirmasi Pengambilan Materi
                 </button>
             </form>
-            @elseif($attendance && $attendance->materi_confirmed)
+            @elseif($attendance && ($attendance->materi_confirmed || $eventConfirmed))
             <div class="mt-3 text-center" style="color:#0ea5e9; font-size:0.85rem;">
                 <i class="fas fa-book-open me-1"></i> Materi sudah dikonfirmasi
             </div>
@@ -189,9 +195,12 @@
 
     {{-- ===== SESI BERIKUTNYA ===== --}}
     @if($nextSession && !$activeSession)
+    @php
+    $sessionEnded = \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s') > $nextSession->jam_selesai;
+    @endphp
     <div class="card mb-3 border-0 overflow-hidden" style="border-radius:20px;">
-        <div class="card-header py-3" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color:#1c1917;">
-            <i class="fas fa-calendar-alt me-2"></i>SESI BERIKUTNYA
+        <div class="card-header py-3" style="background: linear-gradient(135deg, {{ $sessionEnded ? '#6b7280,#9ca3af' : '#f59e0b,#fbbf24' }}); color:{{ $sessionEnded ? '#ffffff' : '#1c1917' }};">
+            <i class="fas {{ $sessionEnded ? 'fa-check-circle' : 'fa-calendar-alt' }} me-2"></i>{{ $sessionEnded ? 'SESI SELESAI' : 'SESI BERIKUTNYA' }}
         </div>
         <div class="card-body p-3 p-md-4">
             <h5 class="card-title fw-bold" style="font-size:1.1rem;">{{ $nextSession->nama_sesi }}</h5>
@@ -200,14 +209,16 @@
                 <i class="fas fa-calendar me-1"></i>{{ date('d F Y', strtotime($currentEvent->tanggal)) }}<br>
                 <i class="fas fa-clock me-1"></i>{{ substr($nextSession->jam_mulai, 0, 5) }} - {{ substr($nextSession->jam_selesai, 0, 5) }}
             </p>
+            @if($sessionEnded)
+            <div class="alert mb-0" style="background:linear-gradient(135deg,#e5e7eb,#d1d5db); color:#374151; border:none;">
+                <i class="fas fa-check-double me-1"></i>Daurah telah selesai. Terima kasih partisipasinya, Jazakallahu khairan.
+            </div>
+            @else
             <div class="alert mb-0" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; border:none;">
                 <i class="fas fa-bell me-1"></i>Harap bersiap dan hadir tepat waktu, inshaAllah.
             </div>
-            @if($currentEvent->group_link)
-            <a href="{{ $currentEvent->group_link }}" target="_blank" class="btn btn-success mt-3 w-100" style="border-radius:12px; font-weight:600;">
-                <i class="fab fa-whatsapp me-2"></i>Bergabung Grup WhatsApp
-            </a>
             @endif
+
         </div>
     </div>
     @endif
@@ -227,18 +238,23 @@
                             <h6 class="mb-1 fw-semibold" style="font-size:0.9rem;">{{ $att->session->nama_sesi ?? 'Sesi' }}</h6>
                             <small class="text-muted" style="font-size:0.78rem;">
                                 {{ $att->event->nama_event ?? 'Event' }} &bull;
-                                {{ \Carbon\Carbon::parse($att->waktu_scan)->locale('id')->isoFormat('D MMM Y, HH:mm') }}
+                                {{ \Carbon\Carbon::parse($att->waktu_scan)->setTimezone('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM YYYY, HH:mm') }} WIB
                             </small>
                         </div>
                         <div class="d-flex flex-column align-items-end gap-1">
                             <span class="badge" style="background:linear-gradient(135deg,#10b981,#34d399); font-size:0.68rem;">
                                 <i class="fas fa-check me-1"></i>Hadir
                             </span>
-                            @if($att->materi_confirmed)
+                            @php
+                            $rowEventConfirmed = $eventMateriConfirmed[$att->event_id] ?? false;
+                            $rowIsFirstAttendance = ($eventFirstAttendanceId[$att->event_id] ?? null) === $att->id;
+                            $rowCanConfirm = $att->event && ($att->event->material_type === 'per_session' || $rowIsFirstAttendance);
+                            @endphp
+                            @if($att->materi_confirmed || $rowEventConfirmed)
                             <span class="badge" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8); font-size:0.68rem;">
                                 <i class="fas fa-book me-1"></i>Materi
                             </span>
-                            @elseif($att->event && $att->event->material_type !== 'none')
+                            @elseif($att->event && $att->event->material_type !== 'none' && $rowCanConfirm)
                             <form action="{{ route('user.materi') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="attendance_id" value="{{ $att->id }}">
@@ -246,6 +262,17 @@
                                     <i class="fas fa-book me-1"></i>Ambil Materi
                                 </button>
                             </form>
+                            @endif
+
+                            @php
+                            $rowIsLastAttendance = ($eventLastAttendanceId[$att->event_id] ?? null) === $att->id;
+                            $rowAllSessionsAttended = $eventAllSessionsAttended[$att->event_id] ?? false;
+                            $rowHasCertTemplate = $att->event && $att->event->cert_enabled && !empty($att->event->cert_template);
+                            @endphp
+                            @if($rowIsLastAttendance && $rowAllSessionsAttended && $rowHasCertTemplate)
+                            <a href="{{ route('certificate', ['event_id' => $att->event_id]) }}" class="badge border-0 text-decoration-none" style="background:linear-gradient(135deg,#7c3aed,#a855f7); font-size:0.68rem;">
+                                <i class="fas fa-certificate me-1"></i>Generate Sertifikat
+                            </a>
                             @endif
                         </div>
                     </div>

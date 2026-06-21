@@ -38,8 +38,8 @@
             </div>
 
             <div id="cert-wrapper" style="width:100%;overflow:hidden;position:relative;background:#666;padding:10px;display:flex;justify-content:center;">
-                <div id="cert-container" style="position:relative;display:inline-block;box-shadow:0 4px 8px rgba(0,0,0,0.5);background:white;">
-<img id="cert-image" src="{{ $event->cert_template }}" alt="Sertifikat" style="display:block;pointer-events:none;">
+                <div id="cert-container" style="position:relative;display:inline-block;box-shadow:0 4px 8px rgba(0,0,0,0.5);background:white;transform-origin:top center;">
+<img id="cert-image" src="{{ $event->cert_template }}?v={{ $certVersion }}" alt="Sertifikat" style="display:block;pointer-events:none;">
                     <div id="draggable-name" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:{{ $event->cert_font_size ?? 30 }}px;color:{{ $event->cert_font_color ?? '#000000' }};font-weight:bold;white-space:nowrap;cursor:move;border:2px dashed rgba(255,0,0,0.5);padding:5px;user-select:none;z-index:10;">
                         {{ $user->nama }}
                     </div>

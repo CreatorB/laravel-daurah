@@ -72,8 +72,9 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>
-                                <div class="fw-bold">{{ date('H:i', strtotime($att->waktu_scan)) }}</div>
-                                <small class="text-muted">{{ date('d/m/Y', strtotime($att->waktu_scan)) }}</small>
+                                @php $waktuWib = \Carbon\Carbon::parse($att->waktu_scan)->setTimezone('Asia/Jakarta'); @endphp
+                                <div class="fw-bold">{{ $waktuWib->format('H:i') }}</div>
+                                <small class="text-muted">{{ $waktuWib->format('d/m/Y') }}</small>
                             </td>
                             <td>
                                 <div class="fw-bold">{{ $att->user->nama }}</div>

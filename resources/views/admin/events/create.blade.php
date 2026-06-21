@@ -16,9 +16,9 @@
     </div>
     @endif
     
-    <form action="{{ route('admin.events.store') }}" method="POST">
+    <form id="createEventForm" action="{{ route('admin.events.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        
+
         <div class="card mb-3 mb-md-4">
             <div class="card-header">Informasi Event</div>
             <div class="card-body">
@@ -26,10 +26,12 @@
                     <div class="col-12">
                         <label class="form-label">Nama Event<span class="text-danger">*</span></label>
                         <input type="text" name="nama_event" class="form-control" value="{{ old('nama_event') }}" required>
+                        <div class="invalid-feedback">Nama event wajib diisi.</div>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Tanggal <span class="text-danger">*</span></label>
                         <input type="date" name="tanggal" class="form-control" value="{{ old('tanggal') }}" required>
+                        <div class="invalid-feedback">Tanggal wajib diisi.</div>
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">QR Mode <span class="text-danger">*</span></label>
@@ -116,18 +118,54 @@
         </div>
         
         <div class="card mb-3 mb-md-4">
+            <div class="card-header">Sertifikat</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="cert_enabled" id="cert_enabled_c" class="form-check-input" value="1" {{ old('cert_enabled') ? 'checked' : '' }} onchange="document.getElementById('cert-settings-c').classList.toggle('d-none', !this.checked)">
+                            <label class="form-check-label" for="cert_enabled_c">Aktifkan Sertifikat</label>
+                        </div>
+                        <small class="text-muted">Jika diaktifkan, peserta yang hadir lengkap di semua sesi dapat generate sertifikat dari riwayat kehadirannya.</small>
+                    </div>
+                    <div id="cert-settings-c" class="row g-3 {{ old('cert_enabled') ? '' : 'd-none' }}">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Template Sertifikat (gambar)</label>
+                            <input type="file" name="cert_template" id="cert_template_c" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Font Sertifikat (opsional)</label>
+                            <input type="file" name="cert_font" class="form-control" accept=".ttf,.otf">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Ukuran Font</label>
+                            <input type="number" name="cert_font_size" class="form-control" value="{{ old('cert_font_size', 30) }}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Warna Font</label>
+                            <input type="color" name="cert_font_color" class="form-control form-control-color" value="{{ old('cert_font_color', '#000000') }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3 mb-md-4">
             <div class="card-header">Sesi Event</div>
             <div class="card-body">
                 <div id="sessions-wrapper">
                     <div class="session-row row g-3 mb-3">
                         <div class="col-12 col-md-4">
                             <input type="text" name="sessions[0][nama_sesi]" class="form-control" placeholder="Nama Sesi (cth: Sesi 1)" required>
+                            <div class="invalid-feedback">Nama sesi wajib diisi.</div>
                         </div>
                         <div class="col-12 col-md-3">
                             <input type="time" name="sessions[0][jam_mulai]" class="form-control" required>
+                            <div class="invalid-feedback">Jam mulai wajib diisi.</div>
                         </div>
                         <div class="col-12 col-md-3">
                             <input type="time" name="sessions[0][jam_selesai]" class="form-control" required>
+                            <div class="invalid-feedback">Jam selesai wajib diisi.</div>
                         </div>
                         <div class="col-12 col-md-2">
                             <button type="button" class="btn btn-danger w-100" onclick="removeSession(this)">
@@ -155,6 +193,70 @@
 
 @push('scripts')
 <script>
+function attachCertAutoCompress(inputId) {
+    const fileInput = document.getElementById(inputId);
+    if (!fileInput) return;
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const maxSize = 8 * 1024 * 1024;
+        if (file.size <= maxSize) return;
+        if (!file.type.match(/^image\/(jpeg|png|jpg|webp)$/)) return;
+
+        try {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 2200;
+
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob(function(blob) {
+                            if (blob && blob.size < file.size) {
+                                const newFile = new File([blob], file.name, { type: blob.type });
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(newFile);
+                                fileInput.files = dataTransfer.files;
+                            }
+                        }, 'image/jpeg', 0.85);
+                    } catch (err) {
+                        console.error('Compression error:', err);
+                    }
+                };
+                img.onerror = function() {
+                    console.error('Image load error');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        } catch (err) {
+            console.error('File read error:', err);
+        }
+    });
+}
+attachCertAutoCompress('cert_template_c');
+
 function updateDiameter(suffix) {
     const r = parseFloat(document.getElementById('radius_meters_' + suffix).value) || 0;
     const d = r * 2;
@@ -171,12 +273,15 @@ function addSession() {
         <div class="session-row row g-3 mb-3">
             <div class="col-12 col-md-4">
                 <input type="text" name="sessions[${sessionCount}][nama_sesi]" class="form-control" placeholder="Nama Sesi" required>
+                <div class="invalid-feedback">Nama sesi wajib diisi.</div>
             </div>
             <div class="col-12 col-md-3">
                 <input type="time" name="sessions[${sessionCount}][jam_mulai]" class="form-control" required>
+                <div class="invalid-feedback">Jam mulai wajib diisi.</div>
             </div>
             <div class="col-12 col-md-3">
                 <input type="time" name="sessions[${sessionCount}][jam_selesai]" class="form-control" required>
+                <div class="invalid-feedback">Jam selesai wajib diisi.</div>
             </div>
             <div class="col-12 col-md-2">
                 <button type="button" class="btn btn-danger w-100" onclick="removeSession(this)">
@@ -195,6 +300,22 @@ function removeSession(btn) {
         btn.closest('.session-row').remove();
     }
 }
+
+const createEventForm = document.getElementById('createEventForm');
+createEventForm.addEventListener('submit', function(e) {
+    if (!this.checkValidity()) {
+        const invalidFields = this.querySelectorAll(':invalid');
+        invalidFields.forEach(el => el.classList.add('is-invalid'));
+        if (invalidFields.length) {
+            invalidFields[0].closest('.card')?.classList.add('border-danger');
+        }
+    }
+});
+createEventForm.addEventListener('input', function(e) {
+    if (e.target.matches('input, select')) {
+        e.target.classList.toggle('is-invalid', !e.target.checkValidity());
+    }
+});
 </script>
 @endpush
 @endsection

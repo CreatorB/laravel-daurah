@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -572,10 +572,37 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.absensi.index') }}">
+                            <i class="fas fa-clipboard-list me-1"></i>Absensi
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.users.index') }}">
                             <i class="fas fa-users me-1"></i>Users
                         </a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="maintenanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-tools me-1"></i>Maintenance
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="maintenanceDropdown">
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.index') }}"><i class="fas fa-home me-2"></i>Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.clear-cache') }}"><i class="fas fa-sync me-2"></i>Clear Cache</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.clear-view') }}"><i class="fas fa-eye-slash me-2"></i>Clear View</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.optimize') }}"><i class="fas fa-rocket me-2"></i>Optimize</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.clear-all') }}"><i class="fas fa-trash-alt me-2"></i>Clear All</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.db-status') }}"><i class="fas fa-database me-2"></i>DB Status</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.migrate') }}"><i class="fas fa-play me-2"></i>Run Migrations</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.maintenance.storage-link') }}"><i class="fas fa-link me-2"></i>Storage Link</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('PERHATIAN: Semua data akan dihapus permanen! Lanjutkan?')) { document.getElementById('reset-db-form').submit(); }"><i class="fas fa-exclamation-triangle me-2"></i>Reset Database</a></li>
+                        </ul>
+                    </li>
+                    <form id="reset-db-form" action="{{ route('admin.maintenance.reset-db') }}" method="POST" style="display: none;">
+                        @csrf
+                    </form>
                     @else
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('user.dashboard') }}">
@@ -602,6 +629,8 @@
     <main class="py-4">
         @yield('content')
     </main>
+
+    @include('layouts.partials.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')

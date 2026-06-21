@@ -8,6 +8,7 @@ use App\Models\EventRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
@@ -26,13 +27,18 @@ class CertificateController extends Controller
         }
         
         $event = Event::find($eventId);
-        
-        if (!$event || empty($event->cert_template)) {
-            return redirect()->route('user.dashboard')->with('error', 'Template sertifikat tidak tersedia.');
+
+        if (!$event || !$event->cert_enabled || empty($event->cert_template)) {
+            return redirect()->route('user.dashboard')->with('error', 'Sertifikat tidak tersedia untuk event ini.');
         }
         
         $user = \App\Models\User::find($userId);
-        
-        return view('user.certificate', compact('event', 'user'));
+
+        $certPath = str_replace('/storage/', '', $event->cert_template);
+        $certVersion = Storage::disk('public')->exists($certPath)
+            ? Storage::disk('public')->lastModified($certPath)
+            : time();
+
+        return view('user.certificate', compact('event', 'user', 'certVersion'));
     }
 }
