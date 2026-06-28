@@ -196,7 +196,8 @@
     {{-- ===== SESI BERIKUTNYA ===== --}}
     @if($nextSession && !$activeSession)
     @php
-    $sessionEnded = \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s') > $nextSession->jam_selesai;
+    $sessionEndAt = \Carbon\Carbon::parse($currentEvent->tanggal . ' ' . $nextSession->jam_selesai, 'Asia/Jakarta');
+    $sessionEnded = \Carbon\Carbon::now('Asia/Jakarta')->greaterThan($sessionEndAt);
     @endphp
     <div class="card mb-3 border-0 overflow-hidden" style="border-radius:20px;">
         <div class="card-header py-3" style="background: linear-gradient(135deg, {{ $sessionEnded ? '#6b7280,#9ca3af' : '#f59e0b,#fbbf24' }}); color:{{ $sessionEnded ? '#ffffff' : '#1c1917' }};">

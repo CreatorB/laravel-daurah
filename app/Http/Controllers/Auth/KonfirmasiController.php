@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Event;
 use App\Models\EventRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -14,6 +15,23 @@ class KonfirmasiController extends Controller
 {
     public function showForm()
     {
+        $event = Event::first();
+
+        if ($event && $event->konfirmasi_buka && $event->konfirmasi_tutup) {
+            $now = now()->timezone('Asia/Jakarta');
+            $buka = \Carbon\Carbon::parse($event->konfirmasi_buka, 'Asia/Jakarta');
+            $tutup = \Carbon\Carbon::parse($event->konfirmasi_tutup, 'Asia/Jakarta');
+
+            if ($now->lt($buka) || $now->gt($tutup)) {
+                return view('auth.konfirmasi-closed', [
+                    'event' => $event,
+                    'buka' => $buka,
+                    'tutup' => $tutup,
+                    'now' => $now,
+                ]);
+            }
+        }
+
         return view('auth.konfirmasi');
     }
 

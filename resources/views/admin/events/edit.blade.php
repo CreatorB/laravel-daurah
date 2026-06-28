@@ -15,7 +15,7 @@
 </style>
 <div class="container event-edit-page">
     <h2 class="mb-4"><i class="fas fa-edit me-2"></i>Edit Event: {{ $event->nama_event }}</h2>
-    
+
     @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -35,7 +35,7 @@
 <form action="{{ route('admin.events.update', $event->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')
-        
+
         <div class="card mb-4">
             <div class="card-header">Informasi Event</div>
             <div class="card-body">
@@ -62,7 +62,32 @@
                 </div>
             </div>
         </div>
-        
+
+        <div class="card mb-4">
+            <div class="card-header">Pengaturan Link Konfirmasi</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Tanggal & Jam Buka Konfirmasi</label>
+                        <input type="datetime-local" name="konfirmasi_buka" class="form-control" value="{{ old('konfirmasi_buka', $event->konfirmasi_buka ? date('Y-m-d\TH:i', strtotime($event->konfirmasi_buka)) : '') }}">
+                        <small class="text-muted">Kosongkan jika tidak ada batasan</small>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Tanggal & Jam Tutup Konfirmasi</label>
+                        <input type="datetime-local" name="konfirmasi_tutup" class="form-control" value="{{ old('konfirmasi_tutup', $event->konfirmasi_tutup ? date('Y-m-d\TH:i', strtotime($event->konfirmasi_tutup)) : '') }}">
+                        <small class="text-muted">Kosongkan jika tidak ada batasan</small>
+                    </div>
+                    <div class="col-12">
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Jika kedua field diisi, link konfirmasi hanya akan muncul dalam rentang waktu tersebut.
+                            Jika kosong, link konfirmasi akan selalu tersedia.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card mb-4">
             <div class="card-header">Pengaturan Kehadiran</div>
             <div class="card-body">
@@ -109,7 +134,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-header">Pengaturan Materi</div>
             <div class="card-body">
@@ -171,7 +196,7 @@
         </div>
 
         <div class="mt-4">
-            <button type="submit" class="btn btn-primary gradient-bg btn-lg w-100">
+            <button type="submit" class="btn btn-success btn-lg w-100">
                 <i class="fas fa-save me-2"></i>Update Event
             </button>
         </div>
@@ -221,7 +246,7 @@
                 </table>
             </div>
             @endif
-            
+
             <form action="{{ route('admin.events.sessions.store', $event->id) }}" method="POST" class="row g-2">
                 @csrf
                 <div class="col-12 col-md-4">
@@ -239,7 +264,7 @@
             </form>
         </div>
     </div>
-    
+
     <div class="card mt-4">
         <div class="card-header">Undang Peserta</div>
         <div class="card-body">
@@ -358,7 +383,7 @@ function saveSession(sessionId) {
     const namaSesi = row.querySelector('input[name="nama_sesi"]').value;
     const jamMulai = row.querySelector('input[name="jam_mulai"]').value;
     const jamSelesai = row.querySelector('input[name="jam_selesai"]').value;
-    
+
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = `/admin/events/sessions/${sessionId}/update`;

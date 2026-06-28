@@ -10,7 +10,7 @@ class Event extends Model
     
     public $timestamps = false;
 
-    protected $fillable = ['nama_event', 'tanggal', 'qr_mode', 'cert_enabled', 'cert_template', 'cert_font', 'cert_font_size', 'cert_font_color', 'radius_lat', 'radius_lng', 'radius_active', 'radius_meters', 'group_link', 'material_type', 'auto_confirm', 'auto_invite'];
+    protected $fillable = ['nama_event', 'tanggal', 'qr_mode', 'cert_enabled', 'cert_template', 'cert_font', 'cert_font_size', 'cert_font_color', 'radius_lat', 'radius_lng', 'radius_active', 'radius_meters', 'group_link', 'material_type', 'auto_confirm', 'auto_invite', 'konfirmasi_buka', 'konfirmasi_tutup'];
 
     protected $hidden = [''];
 
