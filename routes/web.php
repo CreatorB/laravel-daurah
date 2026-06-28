@@ -17,6 +17,8 @@ use App\Http\Controllers\QrController;
 use App\Http\Controllers\ProsesScanController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -30,6 +32,49 @@ Route::get('/konfirmasi', [KonfirmasiController::class, 'showForm'])->name('konf
 Route::post('/konfirmasi', [KonfirmasiController::class, 'store']);
 
 Route::get('/file/bukti-undangan/{filename}', [FileController::class, 'serveBuktiUndangan'])->name('file.bukti-undangan');
+
+Route::get('/locale/{locale}', function (string $locale, \Illuminate\Http\Request $request) {
+    $available = (array) config('questions.locales', ['ar', 'id']);
+    abort_unless(in_array($locale, $available, true), 404);
+
+    $request->session()->put('locale', $locale);
+    $request->session()->save();
+
+    $target = url()->previous() ?: route('questions.index');
+    $separator = str_contains($target, '?') ? '&' : '?';
+    $target .= $separator.'_ts='.time();
+
+    return redirect()->to($target)->withHeaders([
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+    ]);
+})->name('locale.switch');
+
+Route::prefix('questions')->name('questions.')->group(function () {
+    Route::get('/', [QuestionController::class, 'index'])->name('index');
+    Route::get('/ask', [QuestionController::class, 'create'])->name('ask');
+    Route::post('/', [QuestionController::class, 'store'])->name('store');
+    Route::get('/{question:public_ref}', [QuestionController::class, 'show'])
+        ->where('question', '[A-Za-z0-9-]+')
+        ->name('show');
+});
+
+Route::prefix('tanya')->name('tanya.')->group(function () {
+    Route::get('/', [QuestionController::class, 'index'])->name('index');
+    Route::get('/kirim', [QuestionController::class, 'create'])->name('ask');
+    Route::post('/', [QuestionController::class, 'store'])->name('store');
+    Route::get('/{question:public_ref}', [QuestionController::class, 'show'])
+        ->where('question', '[A-Za-z0-9-]+')
+        ->name('show');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/questions', [AdminQuestionController::class, 'index'])->name('questions.index');
+    Route::get('/questions/{question}', [AdminQuestionController::class, 'show'])->name('questions.show');
+    Route::patch('/questions/{question}/approve', [AdminQuestionController::class, 'approve'])->name('questions.approve');
+    Route::patch('/questions/{question}/reject', [AdminQuestionController::class, 'reject'])->name('questions.reject');
+    Route::post('/questions/bulk', [AdminQuestionController::class, 'bulk'])->name('questions.bulk');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
