@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QuestionStatus;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,19 +38,50 @@ class Question extends Model
     protected static function booted(): void
     {
         static::creating(function (Question $question): void {
-            if (empty($question->public_ref)) {
-                $question->public_ref = static::generatePublicRef();
+            if (empty($question->public_ref) && $question->status === QuestionStatus::Approved) {
+                $question->public_ref = static::generatePublicRefForDate(
+                    $question->published_at ?: $question->approved_at ?: now()
+                );
             }
         });
     }
 
+    public static function generatePublicRefForDate(CarbonInterface $date): string
+    {
+        $prefix = $date->format('ymd').'-';
+        $maxAttempts = 50;
+
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $sequence = static::nextDailySequence($date, $prefix);
+            $ref = $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
+
+            if (! static::where('public_ref', $ref)->exists()) {
+                return $ref;
+            }
+        }
+
+        throw new \RuntimeException('Unable to generate unique public_ref for date '.$date->toDateString());
+    }
+
+    protected static function nextDailySequence(CarbonInterface $date, string $prefix): int
+    {
+        $latest = static::query()
+            ->where('public_ref', 'like', $prefix.'%')
+            ->orderByDesc('public_ref')
+            ->value('public_ref');
+
+        if (! $latest) {
+            return 1;
+        }
+
+        $lastSeq = (int) substr($latest, strlen($prefix));
+
+        return $lastSeq + 1;
+    }
+
     public static function generatePublicRef(): string
     {
-        do {
-            $ref = 'Q-'.strtoupper(Str::random(8));
-        } while (static::where('public_ref', $ref)->exists());
-
-        return $ref;
+        return static::generatePublicRefForDate(now());
     }
 
     public function scopeApproved(Builder $query): Builder
@@ -110,6 +142,25 @@ class Question extends Model
         }
 
         return $this->name;
+    }
+
+    public function getDisplayRefAttribute(): string
+    {
+        if (! empty($this->public_ref)) {
+            return $this->public_ref;
+        }
+
+        $date = $this->created_at ?: $this->updated_at ?: now();
+        $prefix = $date->format('ymd').'-';
+        $sequence = (int) static::query()
+            ->whereDate('created_at', $date->toDateString())
+            ->where('id', '<=', $this->id)
+            ->count();
+        if ($sequence < 1) {
+            $sequence = 1;
+        }
+
+        return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 
     public function getExcerptAttribute(?int $length = null): string

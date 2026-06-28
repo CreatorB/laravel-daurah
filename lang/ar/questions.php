@@ -35,6 +35,10 @@ return [
         'show_more' => 'عرض التفاصيل',
         'published_on' => 'تاريخ النشر',
         'page_title' => 'قائمة الأسئلة',
+        'flash_new_one' => 'سؤال جديد واحد',
+        'flash_new_many' => ':count أسئلة جديدة',
+        'flash_removed_one' => 'تم حذف/سحب سؤال واحد',
+        'flash_removed_many' => 'تم حذف/سحب :count أسئلة',
     ],
 
     'show' => [
@@ -136,7 +140,22 @@ return [
         'already_rejected' => 'هذا السؤال مرفوض بالفعل.',
         'approved_success' => 'تم نشر السؤال بنجاح.',
         'rejected_success' => 'تم رفض السؤال.',
+        'deleted_success' => 'تم حذف السؤال.',
+        'flash_approved' => 'تم قبول السؤال',
+        'flash_rejected' => 'تم رفض السؤال',
+        'flash_deleted' => 'تم حذف السؤال',
+        'flash_new_one' => 'سؤال جديد واحد',
+        'flash_new_many' => ':count أسئلة جديدة',
+        'flash_error' => 'حدث خطأ، حاول مرة أخرى.',
         'empty' => 'لا توجد أسئلة في هذه القائمة.',
+        'row' => [
+            'action_approve' => 'قبول هذا السؤال',
+            'action_reject' => 'رفض هذا السؤال',
+            'action_delete' => 'حذف هذا السؤال',
+            'confirm_approve' => 'قبول هذا السؤال؟',
+            'confirm_reject' => 'رفض هذا السؤال؟',
+            'confirm_delete' => 'حذف هذا السؤال نهائياً؟ لا يمكن التراجع.',
+        ],
     ],
 
     'language_switch' => [

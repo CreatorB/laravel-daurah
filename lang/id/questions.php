@@ -35,6 +35,10 @@ return [
         'show_more' => 'Lihat Detail',
         'published_on' => 'Tanggal Publikasi',
         'page_title' => 'Daftar Pertanyaan',
+        'flash_new_one' => '1 pertanyaan baru',
+        'flash_new_many' => ':count pertanyaan baru',
+        'flash_removed_one' => '1 pertanyaan dihapus/dibatalkan',
+        'flash_removed_many' => ':count pertanyaan dihapus/dibatalkan',
     ],
 
     'show' => [
@@ -136,7 +140,22 @@ return [
         'already_rejected' => 'Pertanyaan ini sudah ditolak.',
         'approved_success' => 'Pertanyaan berhasil dipublikasikan.',
         'rejected_success' => 'Pertanyaan berhasil ditolak.',
+        'deleted_success' => 'Pertanyaan berhasil dihapus.',
+        'flash_approved' => 'Pertanyaan disetujui',
+        'flash_rejected' => 'Pertanyaan ditolak',
+        'flash_deleted' => 'Pertanyaan dihapus',
+        'flash_new_one' => '1 pertanyaan baru masuk',
+        'flash_new_many' => ':count pertanyaan baru masuk',
+        'flash_error' => 'Terjadi kesalahan, coba lagi.',
         'empty' => 'Tidak ada pertanyaan pada daftar ini.',
+        'row' => [
+            'action_approve' => 'Setujui pertanyaan ini',
+            'action_reject' => 'Tolak pertanyaan ini',
+            'action_delete' => 'Hapus pertanyaan ini',
+            'confirm_approve' => 'Setujui pertanyaan ini?',
+            'confirm_reject' => 'Tolak pertanyaan ini?',
+            'confirm_delete' => 'Hapus permanen pertanyaan ini? Tindakan tidak dapat dibatalkan.',
+        ],
     ],
 
     'language_switch' => [

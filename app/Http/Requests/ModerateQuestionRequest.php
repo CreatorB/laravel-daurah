@@ -3,12 +3,13 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Session;
 
 class ModerateQuestionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return Session::has('user_id') && Session::get('role') === 'admin';
     }
 
     public function rules(): array

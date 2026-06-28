@@ -52,6 +52,7 @@ Route::get('/locale/{locale}', function (string $locale, \Illuminate\Http\Reques
 
 Route::prefix('questions')->name('questions.')->group(function () {
     Route::get('/', [QuestionController::class, 'index'])->name('index');
+    Route::get('/recent', [QuestionController::class, 'recent'])->name('recent');
     Route::get('/ask', [QuestionController::class, 'create'])->name('ask');
     Route::post('/', [QuestionController::class, 'store'])->name('store');
     Route::get('/{question:public_ref}', [QuestionController::class, 'show'])
@@ -61,6 +62,7 @@ Route::prefix('questions')->name('questions.')->group(function () {
 
 Route::prefix('tanya')->name('tanya.')->group(function () {
     Route::get('/', [QuestionController::class, 'index'])->name('index');
+    Route::get('/recent', [QuestionController::class, 'recent'])->name('recent');
     Route::get('/kirim', [QuestionController::class, 'create'])->name('ask');
     Route::post('/', [QuestionController::class, 'store'])->name('store');
     Route::get('/{question:public_ref}', [QuestionController::class, 'show'])
@@ -70,9 +72,11 @@ Route::prefix('tanya')->name('tanya.')->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/questions', [AdminQuestionController::class, 'index'])->name('questions.index');
+    Route::get('/questions/recent', [AdminQuestionController::class, 'recent'])->name('questions.recent');
     Route::get('/questions/{question}', [AdminQuestionController::class, 'show'])->name('questions.show');
     Route::patch('/questions/{question}/approve', [AdminQuestionController::class, 'approve'])->name('questions.approve');
     Route::patch('/questions/{question}/reject', [AdminQuestionController::class, 'reject'])->name('questions.reject');
+    Route::delete('/questions/{question}', [AdminQuestionController::class, 'destroy'])->name('questions.destroy');
     Route::post('/questions/bulk', [AdminQuestionController::class, 'bulk'])->name('questions.bulk');
 });
 
