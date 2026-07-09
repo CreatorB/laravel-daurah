@@ -19,22 +19,23 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">No HP<span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">+62</span>
-                                <input type="text" name="nohp" class="form-control" placeholder="8123456789" required>
-                            </div>
+                            <input type="text" name="nohp" class="form-control @error('nohp') is-invalid @enderror" value="{{ old('nohp') }}" placeholder="081234567890" required>
+                            <small class="text-muted">Contoh: 081234567890 (boleh dengan/tanpa +62 di depan)</small>
+                            @error('nohp')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
+                            @error('email')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Lembaga</label>
                             <input type="text" name="lembaga" class="form-control" value="{{ old('lembaga', 'PRIBADI') }}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Alamat</label>
-                            <textarea name="alamat" class="form-control" rows="3">{{ old('alamat') }}</textarea>
+                            <label class="form-label">Alamat / Domisili</label>
+                            <textarea name="alamat" class="form-control @error('alamat') is-invalid @enderror" rows="3" placeholder="Alamat (juga akan tersimpan sebagai domisili)">{{ old('alamat') }}</textarea>
+                            @error('alamat')<div class="text-danger small">{{ $message }}</div>@enderror
                         </div>
                         <button type="submit" class="btn btn btn-primary gradient-bg w-100">
                             <i class="fas fa-save me-2"></i>Simpan

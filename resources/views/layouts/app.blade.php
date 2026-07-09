@@ -581,6 +581,11 @@
                             <i class="fas fa-users me-1"></i>Users
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.questions.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.questions.index') }}">
+                            <i class="fas fa-question-circle me-1"></i>Pertanyaan
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="maintenanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-tools me-1"></i>Maintenance
