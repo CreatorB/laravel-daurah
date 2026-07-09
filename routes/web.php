@@ -122,6 +122,12 @@ Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.
     
     Route::get('/admin/history', [HistoryController::class, 'index'])->name('admin.history');
 
+    Route::get('/admin/recycle-bin', [\App\Http\Controllers\Admin\RecycleBinController::class, 'index'])->name('admin.recycle-bin.index');
+    Route::get('/admin/recycle-bin/{id}', [\App\Http\Controllers\Admin\RecycleBinController::class, 'show'])->name('admin.recycle-bin.show');
+    Route::post('/admin/recycle-bin/{id}/restore', [\App\Http\Controllers\Admin\RecycleBinController::class, 'restore'])->name('admin.recycle-bin.restore');
+    Route::post('/admin/recycle-bin/{id}/force', [\App\Http\Controllers\Admin\RecycleBinController::class, 'forceDestroy'])->name('admin.recycle-bin.force');
+    Route::post('/admin/recycle-bin/{id}/purge', [\App\Http\Controllers\Admin\RecycleBinController::class, 'purge'])->name('admin.recycle-bin.purge');
+
     Route::get('/admin/maintenance', [AdminMaintenanceController::class, 'index'])->name('admin.maintenance.index');
     Route::get('/admin/maintenance/clear-cache', [AdminMaintenanceController::class, 'clearCache'])->name('admin.maintenance.clear-cache');
     Route::get('/admin/maintenance/clear-view', [AdminMaintenanceController::class, 'clearView'])->name('admin.maintenance.clear-view');

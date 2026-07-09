@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'events';
-    
+
     public $timestamps = false;
 
     protected $fillable = ['nama_event', 'tanggal', 'qr_mode', 'cert_enabled', 'cert_template', 'cert_font', 'cert_font_size', 'cert_font_color', 'radius_lat', 'radius_lng', 'radius_active', 'radius_meters', 'group_link', 'material_type', 'auto_confirm', 'auto_invite', 'konfirmasi_buka', 'konfirmasi_tutup'];

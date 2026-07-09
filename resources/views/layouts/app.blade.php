@@ -59,16 +59,48 @@
             font-size: 1.1rem;
         }
         
-        .nav-link {
+        .navbar .nav-link {
             color: rgba(255,255,255,0.9) !important;
             transition: all 0.3s ease;
             font-size: 0.9rem;
             padding: 0.5rem 1rem !important;
         }
-        
-        .nav-link:hover {
+
+        .navbar .nav-link:hover {
             color: white !important;
             transform: translateY(-2px);
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #e0f2fe;
+        }
+
+        .nav-tabs .nav-link {
+            color: #475569 !important;
+            font-weight: 500;
+            border: none;
+            border-bottom: 3px solid transparent;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 0.65rem 1.1rem !important;
+            background: transparent !important;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color) !important;
+            border-bottom-color: var(--secondary-color);
+            transform: none;
+            background: #f0f9ff !important;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color) !important;
+            background: rgba(14, 165, 233, 0.1) !important;
+            border-bottom-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link .badge {
+            color: white;
         }
         
         .btn-primary {
@@ -584,6 +616,19 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.questions.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.questions.index') }}">
                             <i class="fas fa-question-circle me-1"></i>Pertanyaan
+                        </a>
+                    </li>
+                    @php
+                        try {
+                            $recycleCount = \App\Models\RecycleBin::whereNull('restored_at')->whereNull('permanently_deleted_at')->count();
+                        } catch (\Throwable $e) {
+                            $recycleCount = 0;
+                        }
+                    @endphp
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.recycle-bin.*') ? 'active fw-semibold' : '' }}" href="{{ route('admin.recycle-bin.index') }}">
+                            <i class="fas fa-recycle me-1"></i>Recycle Bin
+                            @if($recycleCount > 0)<span class="badge bg-danger ms-1">{{ $recycleCount }}</span>@endif
                         </a>
                     </li>
                     <li class="nav-item dropdown">

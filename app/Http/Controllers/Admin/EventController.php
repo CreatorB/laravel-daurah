@@ -8,8 +8,10 @@ use App\Models\EventSession;
 use App\Models\EventRegistration;
 use App\Models\User;
 use App\Models\Material;
+use App\Models\RecycleBin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 class EventController extends Controller
@@ -194,12 +196,25 @@ class EventController extends Controller
     public function destroy($id)
     {
         $event = Event::with(['sessions', 'registrations', 'attendances', 'materials'])->findOrFail($id);
-        $event->attendances()->delete();
-        $event->sessions()->delete();
-        $event->registrations()->delete();
-        $event->materials()->delete();
+
+        RecycleBin::create([
+            'entity_type' => Event::class,
+            'entity_id' => $event->id,
+            'label' => trim(($event->nama_event ?? 'Event') . ' • ' . ($event->tanggal ?? '')),
+            'snapshot' => [
+                'event' => $event->toArray(),
+                'sessions' => $event->sessions->toArray(),
+                'registrations' => $event->registrations->toArray(),
+                'attendances' => $event->attendances->toArray(),
+                'materials' => $event->materials->toArray(),
+            ],
+            'deleted_by_name' => Session::get('nama') ?? 'admin',
+            'deleted_at' => now(),
+        ]);
+
         $event->delete();
-        return redirect()->route('admin.events.index')->with('success', 'Event berhasil dihapus!');
+
+        return redirect()->route('admin.events.index')->with('success', 'Event dipindahkan ke Recycle Bin.');
     }
 
     public function addSession(Request $request, $id)

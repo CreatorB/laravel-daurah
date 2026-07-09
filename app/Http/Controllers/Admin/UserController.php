@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\RecycleBin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -120,16 +122,19 @@ public function index(Request $request)
 public function destroy($id)
     {
         $user = User::findOrFail($id);
-        
-        if ($user->bukti_undangan) {
-            Storage::disk('public')->delete($user->bukti_undangan);
-        }
-        
-        $user->registrations()->delete();
-        $user->attendances()->delete();
+
+        RecycleBin::create([
+            'entity_type' => User::class,
+            'entity_id' => $user->id,
+            'label' => trim(($user->nama ?? 'User') . ' • ' . ($user->nohp ?? '')),
+            'snapshot' => $user->toArray(),
+            'deleted_by_name' => Session::get('nama') ?? 'admin',
+            'deleted_at' => now(),
+        ]);
+
         $user->delete();
-        
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus!');
+
+        return redirect()->route('admin.users.index')->with('success', 'User dipindahkan ke Recycle Bin.');
     }
 
     public function destroyBulk(Request $request)
@@ -142,18 +147,22 @@ public function destroy($id)
         }
 
         $users = User::whereIn('id', $ids)->get();
-        
+        $actor = Session::get('nama') ?? 'admin';
+
         foreach ($users as $user) {
-            if ($user->bukti_undangan) {
-                Storage::disk('public')->delete($user->bukti_undangan);
-            }
-            $user->registrations()->delete();
-            $user->attendances()->delete();
+            RecycleBin::create([
+                'entity_type' => User::class,
+                'entity_id' => $user->id,
+                'label' => trim(($user->nama ?? 'User') . ' • ' . ($user->nohp ?? '')),
+                'snapshot' => $user->toArray(),
+                'deleted_by_name' => $actor,
+                'deleted_at' => now(),
+            ]);
             $user->delete();
         }
-        
+
         $count = count($users);
-        return redirect()->route('admin.users.index')->with('success', "$count user berhasil dihapus!");
+        return redirect()->route('admin.users.index')->with('success', "$count user dipindahkan ke Recycle Bin.");
     }
 
     public function importCsv(Request $request)
