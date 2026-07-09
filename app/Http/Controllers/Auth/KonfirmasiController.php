@@ -15,21 +15,34 @@ class KonfirmasiController extends Controller
 {
     public function showForm()
     {
-        $event = Event::first();
+        $now = now()->timezone('Asia/Jakarta');
 
-        if ($event && $event->konfirmasi_buka && $event->konfirmasi_tutup) {
-            $now = now()->timezone('Asia/Jakarta');
-            $buka = \Carbon\Carbon::parse($event->konfirmasi_buka, 'Asia/Jakarta');
-            $tutup = \Carbon\Carbon::parse($event->konfirmasi_tutup, 'Asia/Jakarta');
+        $activeEvent = Event::whereNotNull('konfirmasi_buka')
+            ->whereNotNull('konfirmasi_tutup')
+            ->where('konfirmasi_buka', '<=', $now)
+            ->where('konfirmasi_tutup', '>=', $now)
+            ->orderByDesc('id')
+            ->first();
 
-            if ($now->lt($buka) || $now->gt($tutup)) {
-                return view('auth.konfirmasi-closed', [
-                    'event' => $event,
-                    'buka' => $buka,
-                    'tutup' => $tutup,
-                    'now' => $now,
-                ]);
-            }
+        if ($activeEvent) {
+            return view('auth.konfirmasi');
+        }
+
+        $latestDatedEvent = Event::whereNotNull('konfirmasi_buka')
+            ->whereNotNull('konfirmasi_tutup')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($latestDatedEvent) {
+            $buka = \Carbon\Carbon::parse($latestDatedEvent->konfirmasi_buka, 'Asia/Jakarta');
+            $tutup = \Carbon\Carbon::parse($latestDatedEvent->konfirmasi_tutup, 'Asia/Jakarta');
+
+            return view('auth.konfirmasi-closed', [
+                'event' => $latestDatedEvent,
+                'buka' => $buka,
+                'tutup' => $tutup,
+                'now' => $now,
+            ]);
         }
 
         return view('auth.konfirmasi');
@@ -37,6 +50,26 @@ class KonfirmasiController extends Controller
 
     public function store(Request $request)
     {
+        $now = now()->timezone('Asia/Jakarta');
+        $blockingEvent = Event::whereNotNull('konfirmasi_buka')
+            ->whereNotNull('konfirmasi_tutup')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($blockingEvent) {
+            $buka = \Carbon\Carbon::parse($blockingEvent->konfirmasi_buka, 'Asia/Jakarta');
+            $tutup = \Carbon\Carbon::parse($blockingEvent->konfirmasi_tutup, 'Asia/Jakarta');
+
+            if ($now->lt($buka) || $now->gt($tutup)) {
+                return view('auth.konfirmasi-closed', [
+                    'event' => $blockingEvent,
+                    'buka' => $buka,
+                    'tutup' => $tutup,
+                    'now' => $now,
+                ]);
+            }
+        }
+
         $request->validate([
             'nama' => 'required|string|max:255',
             'lembaga' => 'required|string|max:255',
