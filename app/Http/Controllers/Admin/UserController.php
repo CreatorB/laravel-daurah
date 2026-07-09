@@ -60,6 +60,9 @@ public function index(Request $request)
 
     public function store(Request $request)
     {
+        $nohp = $this->formatPhone($request->nohp);
+
+        $request->merge(['nohp' => $nohp]);
         $request->validate([
             'nama' => 'required|string|max:255',
             'nohp' => 'required|string|max:20|unique:users,nohp',
@@ -68,14 +71,13 @@ public function index(Request $request)
             'alamat' => 'nullable|string',
         ]);
 
-        $nohp = $this->formatPhone($request->nohp);
-
         User::create([
             'nama' => $request->nama,
             'nohp' => $nohp,
             'email' => $request->email,
-            'lembaga' => $request->lembaga,
+            'lembaga' => $request->lembaga ?: 'PRIBADI',
             'alamat' => $request->alamat,
+            'domisili' => $request->alamat,
             'role' => 'user',
         ]);
 
@@ -92,6 +94,9 @@ public function index(Request $request)
     {
         $user = User::findOrFail($id);
 
+        $nohp = $this->formatPhone($request->nohp);
+
+        $request->merge(['nohp' => $nohp]);
         $request->validate([
             'nama' => 'required|string|max:255',
             'nohp' => 'required|string|max:20|unique:users,nohp,' . $id,
@@ -100,14 +105,13 @@ public function index(Request $request)
             'alamat' => 'nullable|string',
         ]);
 
-        $nohp = $this->formatPhone($request->nohp);
-
         $user->update([
             'nama' => $request->nama,
             'nohp' => $nohp,
             'email' => $request->email,
-            'lembaga' => $request->lembaga,
+            'lembaga' => $request->lembaga ?: 'PRIBADI',
             'alamat' => $request->alamat,
+            'domisili' => $request->alamat,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diupdate!');
@@ -186,6 +190,7 @@ public function destroy($id)
                     'nohp' => $nohp,
                     'lembaga' => $lembaga,
                     'alamat' => $alamat,
+                    'domisili' => $alamat,
                     'role' => 'user',
                 ]);
                 $imported++;
@@ -320,19 +325,19 @@ public function exportCsv(Request $request)
     private function formatPhone($phone)
     {
         $phone = preg_replace('/[^0-9]/', '', $phone);
-        
-        if (substr($phone, 0, 2) == '08') {
-            return '62' . substr($phone, 1);
+
+        if (substr($phone, 0, 3) === '620') {
+            return '0' . substr($phone, 3);
         }
-        
-        if (substr($phone, 0, 3) == '+62') {
-            return substr($phone, 1);
+
+        if (substr($phone, 0, 2) === '62') {
+            return '0' . substr($phone, 2);
         }
-        
-        if (substr($phone, 0, 2) == '62') {
+
+        if (substr($phone, 0, 1) === '0') {
             return $phone;
         }
-        
-        return $phone;
+
+        return '0' . $phone;
     }
 }
