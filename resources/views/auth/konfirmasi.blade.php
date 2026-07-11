@@ -327,6 +327,13 @@
         const form = document.querySelector('form[action="{{ route("konfirmasi") }}"]');
         if (form) {
             form.addEventListener('submit', function(e) {
+                const nohp = document.getElementById('nohp').value.replace(/[^0-9]/g, '');
+                if (!nohp.startsWith('08')) {
+                    e.preventDefault();
+                    alert('Nomor WhatsApp harus diawali dengan 08');
+                    document.getElementById('nohp').focus();
+                    return;
+                }
                 console.log('Form submitting...');
                 const fileInput = document.getElementById('bukti_undangan');
                 if (fileInput && fileInput.files.length > 0) {
@@ -470,9 +477,13 @@
                         <div class="col-12 col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Nomor WhatsApp <span class="text-danger">*</span></label>
-                                <input type="text" name="nohp" class="form-control @error('nohp') is-invalid @enderror" 
-                                    value="{{ old('nohp') }}" required placeholder="081234567890">
+                                <input type="text" name="nohp" id="nohp" class="form-control @error('nohp') is-invalid @enderror" 
+                                    value="{{ old('nohp') }}" required placeholder="081234567890" pattern="08.*" title="Nomor harus diawali dengan 08">
                                 <span class="help-text">Contoh: 081234567890</span>
+                                <div id="nohp-error" class="text-danger mt-1" style="font-size: 11px; display: none;">Nomor WhatsApp harus diawali dengan 08</div>
+                                @error('nohp')
+                                <div class="text-danger mt-1" style="font-size: 11px;">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         
