@@ -3,7 +3,7 @@
 return [
 
     'app_name' => 'Tanya Jawab Daurah Syariyyah',
-    'tagline' => 'Ajukan pertanyaan agama Anda kepada para ustadz/ulama dan dapatkan jawaban yang bermanfaat.',
+    'tagline' => "*Ajukan pertanyaan kepada Syaikh dengan menuliskannya dalam bahasa Arab di kolom berikut ini\n*Pertanyaan akan ditinjau terlebih dahulu oleh panitia sebelum dipublikasikan",
 
     'nav' => [
         'home' => 'Beranda',
@@ -14,15 +14,14 @@ return [
 
     'home' => [
         'have_question' => 'Punya pertanyaan?',
-        'intro' => 'Ajukan pertanyaan agama Anda kepada para ustadz/ulama dan dapatkan jawaban yang bermanfaat.',
+        'intro' => "*Ajukan pertanyaan kepada Syaikh dengan menuliskannya dalam bahasa Arab di kolom berikut ini",
         'submit_cta' => 'Kirim Pertanyaan',
         'browse_cta' => 'Lihat Pertanyaan',
-        'review_note' => 'Pertanyaan Anda akan ditinjau oleh ustadz/ulama sebelum dipublikasikan.',
     ],
 
     'ask' => [
         'title' => 'Kirim Pertanyaan',
-        'intro' => 'Pertanyaan Anda akan ditinjau oleh ustadz/ulama sebelum dipublikasikan.',
+        'intro' => '*Pertanyaan akan ditinjau terlebih dahulu oleh panitia sebelum dipublikasikan',
         'submit_button' => 'Kirim Pertanyaan',
         'sending' => 'Mengirim...',
         'counter_label' => 'karakter',

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-12 col-lg-8">
         <div class="q-hero mb-4 mb-md-5 text-center">
             <h1 class="h2 fw-bold mb-2">{{ __('questions.list.page_title') }}</h1>
             <p class="lead mb-0 opacity-90">{{ __('questions.list.subtitle') }}</p>
@@ -25,19 +25,21 @@
         @else
             <div class="d-flex flex-column gap-3" id="qList">
                 @foreach($questions as $q)
-                    <article class="q-card p-4" data-q-id="{{ $q->id }}" data-q-ref="{{ $q->public_ref }}">
-                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                            <span class="q-pill">
-                                <i class="bi bi-hash"></i>{{ $q->public_ref }}
-                            </span>
-                            <span class="badge bg-light text-dark border">
-                                {{ strtoupper($q->locale) }}
-                            </span>
-                            <span class="text-muted small">
-                                <i class="bi bi-person-circle me-1"></i>
-                                {{ $q->display_name }}
-                            </span>
-                            <span class="text-muted small ms-auto">
+                    <article class="q-card p-3 p-md-4" data-q-id="{{ $q->id }}" data-q-ref="{{ $q->public_ref }}">
+                        <div class="q-card-header">
+                            <div class="q-card-meta-start d-flex flex-wrap align-items-center gap-2">
+                                <span class="q-pill">
+                                    <i class="bi bi-hash"></i>{{ $q->public_ref }}
+                                </span>
+                                <span class="badge bg-light text-dark border">
+                                    {{ strtoupper($q->locale) }}
+                                </span>
+                                <span class="text-muted small">
+                                    <i class="bi bi-person-circle me-1"></i>
+                                    {{ $q->display_name }}
+                                </span>
+                            </div>
+                            <span class="text-muted small q-card-date">
                                 <i class="bi bi-calendar3 me-1"></i>
                                 {{ optional($q->published_at ?: $q->approved_at)->format('d M Y') }}
                             </span>
@@ -52,10 +54,6 @@
                     </article>
                 @endforeach
             </div>
-
-            <div class="mt-4 d-flex justify-content-center q-pagination" id="qPagination">
-                {{ $questions->links() }}
-            </div>
         @endif
     </div>
 </div>
@@ -66,7 +64,6 @@
 (function () {
     const list = document.getElementById('qList');
     const emptyEl = document.getElementById('qEmpty');
-    const paginationEl = document.getElementById('qPagination');
     const liveStatus = document.getElementById('qLiveStatus');
     const liveStatusText = document.getElementById('qLiveStatusText');
     const liveStatusPill = document.getElementById('qLiveStatusPill');
@@ -122,7 +119,7 @@
 
     function buildCard(item) {
         const article = document.createElement('article');
-        article.className = 'q-card p-4 q-card-new';
+        article.className = 'q-card p-3 p-md-4 q-card-new';
         article.setAttribute('data-q-id', String(item.id));
         article.setAttribute('data-q-ref', item.public_ref || '');
 
@@ -134,11 +131,13 @@
         const url = item.show_url || '#';
 
         article.innerHTML =
-            '<div class="d-flex flex-wrap align-items-center gap-2 mb-2">' +
-                '<span class="q-pill"><i class="bi bi-hash"></i>' + ref + '</span>' +
-                '<span class="badge bg-light text-dark border">' + lc + '</span>' +
-                '<span class="text-muted small"><i class="bi bi-person-circle me-1"></i>' + name + '</span>' +
-                '<span class="text-muted small ms-auto"><i class="bi bi-calendar3 me-1"></i>' + date + '</span>' +
+            '<div class="q-card-header">' +
+                '<div class="q-card-meta-start d-flex flex-wrap align-items-center gap-2">' +
+                    '<span class="q-pill"><i class="bi bi-hash"></i>' + ref + '</span>' +
+                    '<span class="badge bg-light text-dark border">' + lc + '</span>' +
+                    '<span class="text-muted small"><i class="bi bi-person-circle me-1"></i>' + name + '</span>' +
+                '</div>' +
+                '<span class="text-muted small q-card-date"><i class="bi bi-calendar3 me-1"></i>' + date + '</span>' +
             '</div>' +
             '<p class="mb-3" style="white-space: pre-line;">' + excerpt + '</p>' +
             '<a href="' + url + '" class="btn btn-sm q-btn-outline btn-outline-secondary">' +
@@ -251,7 +250,6 @@
                     const card = buildCard(item);
                     list.appendChild(card);
                 });
-                if (paginationEl) paginationEl.style.display = 'none';
             }
 
             if (newOnes.length === 0 && removedCount === 0) return;

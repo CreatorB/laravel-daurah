@@ -4,15 +4,15 @@
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-12 col-lg-8">
         <div class="q-hero mb-4 mb-md-5 text-center">
             <h1 class="h2 fw-bold mb-2">{{ __('questions.home.have_question') }}</h1>
-            <p class="lead mb-0 opacity-90">{{ __('questions.home.intro') }}</p>
+            <p class="lead mb-0 opacity-90">{!! nl2br(__('questions.home.intro')) !!}</p>
         </div>
 
-        <div class="q-card p-4 p-md-5">
+        <div class="q-card p-3 p-md-4 p-lg-5">
             <h2 class="h4 fw-bold mb-1">{{ __('questions.ask.title') }}</h2>
-            <p class="text-muted mb-4">{{ __('questions.ask.intro') }}</p>
+            <p class="text-muted small mb-3">{{ __('questions.ask.intro') }}</p>
 
             @if ($errors->any())
                 <div class="alert alert-danger">
@@ -59,7 +59,7 @@
                         required
                     >{{ old('question_body') }}</textarea>
                     <div class="d-flex justify-content-between mt-1">
-                        <small class="text-muted">{{ __('questions.ask.intro') }}</small>
+                        <span></span>
                         <small class="q-counter" id="qCounter" data-max="{{ $maxLength }}">
                             <span id="qCounterValue">0</span> / {{ $maxLength }} {{ __('questions.ask.counter_label') }}
                         </small>

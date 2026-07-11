@@ -19,8 +19,7 @@ class QuestionController extends Controller
         $questions = Question::query()
             ->approved()
             ->orderBy('id')
-            ->paginate((int) config('questions.per_page', 10))
-            ->withQueryString();
+            ->get();
 
         return view('questions.index', [
             'questions' => $questions,

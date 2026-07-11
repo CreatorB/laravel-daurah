@@ -28,9 +28,9 @@ class QuestionController extends Controller
             ->when($request->filled('lesson_code'), fn ($q) => $q->where('lesson_code', $request->query('lesson_code')));
 
         match ($tab) {
-            QuestionStatus::Approved->value => $query->approved()->latestPublished(),
-            QuestionStatus::Rejected->value => $query->rejected()->orderByDesc('rejected_at')->orderByDesc('id'),
-            default => $query->pending()->orderByDesc('id'),
+            QuestionStatus::Approved->value => $query->approved()->orderBy('id'),
+            QuestionStatus::Rejected->value => $query->rejected()->orderBy('id'),
+            default => $query->pending()->orderBy('id'),
         };
 
         $questions = $query->paginate(15)->withQueryString();
