@@ -340,12 +340,22 @@
                 <p>Silakan masuk dengan nomor WhatsApp</p>
             </div>
             
-            <div class="login-body">
+<div class="login-body">
                 @if(session('error'))
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                    <div class="mt-2" style="font-size: 12px;">
+                        <a href="{{ route('konfirmasi') }}" class="text-decoration-none" style="color: #991b1b; font-weight: 600;">
+                            <i class="fas fa-user-plus me-1"></i>Daftar Sekarang
+                        </a>
+                    </div>
                 </div>
                 @endif
+                @error('nohp')
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ $message }}
+                </div>
+                @enderror
                 
                 <form action="{{ route('login') }}" method="POST">
                     @csrf
@@ -370,6 +380,10 @@
                         <span>Masuk</span>
                     </button>
                 </form>
+                
+                <div class="login-footer">
+                    <p>Belum punya akun? <a href="{{ route('konfirmasi') }}">Daftar di sini</a></p>
+                </div>
             </div>
         </div>
     </div>

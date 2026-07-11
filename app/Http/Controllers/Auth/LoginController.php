@@ -39,7 +39,9 @@ class LoginController extends Controller
             return redirect()->route('user.dashboard');
         }
         
-        return redirect()->route('konfirmasi')->with('error', 'Nomor belum terdaftar. Silakan daftar terlebih dahulu.');
+        return redirect()->route('login')
+            ->withInput()
+            ->with('error', 'Nomor WhatsApp belum terdaftar. Silakan daftar terlebih dahulu atau periksa kembali nomor Anda.');
     }
 
     public function logout()
