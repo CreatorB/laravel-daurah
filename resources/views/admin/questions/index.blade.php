@@ -243,6 +243,68 @@
         performAction(btn);
     });
 
+    const bulkForm = document.getElementById('bulk-form');
+    const selectAll = document.getElementById('select-all');
+    const rowCheckboxes = () => bulkForm ? bulkForm.querySelectorAll('tbody input[type="checkbox"][name="ids[]"]') : [];
+
+    function syncSelectAllState() {
+        if (!selectAll) return;
+        const checks = rowCheckboxes();
+        const total = checks.length;
+        let checked = 0;
+        checks.forEach((cb) => { if (cb.checked) checked += 1; });
+        if (total === 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+            selectAll.disabled = true;
+            return;
+        }
+        selectAll.disabled = false;
+        selectAll.checked = checked === total;
+        selectAll.indeterminate = checked > 0 && checked < total;
+    }
+
+    function toggleAll(source) {
+        const checks = rowCheckboxes();
+        checks.forEach((cb) => { cb.checked = source.checked; });
+        if (source.indeterminate !== undefined) source.indeterminate = false;
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () { toggleAll(this); });
+    }
+    if (bulkForm) {
+        bulkForm.addEventListener('change', function (e) {
+            if (e.target.matches('tbody input[type="checkbox"][name="ids[]"]')) {
+                syncSelectAllState();
+            }
+        });
+        bulkForm.addEventListener('submit', function (e) {
+            if (!window.confirmBulk()) e.preventDefault();
+        });
+        syncSelectAllState();
+    }
+
+    window.confirmBulk = function () {
+        const checks = rowCheckboxes();
+        let count = 0;
+        checks.forEach((cb) => { if (cb.checked) count += 1; });
+        if (count === 0) {
+            showFlash('{{ __('questions.admin.bulk.no_selection') }}', 'warning');
+            hideFlashDelayed(2500);
+            return false;
+        }
+        const action = bulkForm.querySelector('select[name="action"]').value;
+        const confirmMap = {
+            approve: '{{ __('questions.admin.bulk.confirm_approve') }}',
+            reject: '{{ __('questions.admin.bulk.confirm_reject') }}',
+            delete: '{{ __('questions.admin.bulk.confirm_delete') }}',
+        };
+        const template = confirmMap[action] || '{{ __('questions.admin.bulk.confirm_generic') }}';
+        const msg = template.replace(/:count/g, String(count));
+        return confirm(msg);
+    };
+
     const POLL_MS = 8000;
     setInterval(fetchRecent, POLL_MS);
     document.addEventListener('visibilitychange', function () {
@@ -346,7 +408,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.questions.bulk') }}" id="bulk-form" onsubmit="return confirmBulk()">
+    <form method="POST" action="{{ route('admin.questions.bulk') }}" id="bulk-form">
         @csrf
         <input type="hidden" name="status" value="{{ $tab }}">
 
@@ -372,7 +434,7 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 36px;">
-                                <input type="checkbox" onchange="toggleAll(this)" aria-label="select-all">
+                                <input type="checkbox" id="select-all" aria-label="select-all">
                             </th>
                             <th style="width: 120px;">{{ __('questions.admin.table.ref') }}</th>
                             <th>{{ __('questions.admin.table.name') }}</th>
