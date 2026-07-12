@@ -25,11 +25,13 @@ DECODED=$(echo "$PAYLOAD_B64" | base64 -d 2>/dev/null)
 echo "Decoded payload: $DECODED"
 
 ACCOUNT_TAG=$(echo "$DECODED" | python3 -c "import sys,json; print(json.load(sys.stdin)['a'])")
-TUNNEL_SECRET=$(echo "$DECODED" | python3 -c "import sys,json; print(json.load(sys.stdin)['s'])" | base64 -d 2>/dev/null || echo "$DECODED" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['s']).decode())")
+TUNNEL_SECRET_B64=$(echo "$DECODED" | python3 -c "import sys,json; print(json.load(sys.stdin)['s'])")
+TUNNEL_SECRET_UUID=$(echo "$TUNNEL_SECRET_B64" | base64 -d 2>/dev/null || echo "<decode failed>")
 TUNNEL_ID=$(echo "$DECODED" | python3 -c "import sys,json; print(json.load(sys.stdin)['t'])")
 
 echo "  AccountTag    : $ACCOUNT_TAG"
-echo "  TunnelSecret  : $TUNNEL_SECRET"
+echo "  TunnelSecret  : $TUNNEL_SECRET_UUID"
+echo "    (base64)    : $TUNNEL_SECRET_B64"
 echo "  TunnelID      : $TUNNEL_ID"
 
 echo ""
@@ -38,7 +40,7 @@ mkdir -p "$CONFIG_DIR"
 cat > "$CONFIG_DIR/$TUNNEL_ID.json" <<EOF
 {
   "AccountTag": "$ACCOUNT_TAG",
-  "TunnelSecret": "$TUNNEL_SECRET",
+  "TunnelSecret": "$TUNNEL_SECRET_B64",
   "TunnelID": "$TUNNEL_ID"
 }
 EOF
@@ -154,8 +156,9 @@ echo "=== DONE ==="
 echo ""
 echo "SELANJUTNYA (manual di dashboard Cloudflare):"
 echo "1. Buka https://one.dash.cloudflare.com/ > Zero Trust > Networks > Tunnels"
-echo "2. Klik tunnel 'syathiby-tunnel' > tab 'Public Hostname'"
-echo "3. Tambah 18 public hostname:"
+echo "2. Klik tunnel 'syathiby-tunnel' > tab 'Hostname routes (Beta)'"
+echo "   (di UI baru, 'Public Hostname' sudah diganti jadi 'Hostname routes')"
+echo "3. Tambah 18 hostname routes:"
 echo "   - subdomain: (kosong) | domain: syathibyonline.com | service: https://localhost:443"
 echo "   - subdomain: www | domain: syathibyonline.com | service: https://localhost:443"
 echo "   - subdomain: (kosong) | domain: syathiby.com | service: https://localhost:443"
