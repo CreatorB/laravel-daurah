@@ -3,7 +3,7 @@
 return [
 
     'app_name' => 'Tanya Jawab Daurah Syariyyah',
-    'tagline' => "*Ajukan pertanyaan kepada Syaikh dengan menuliskannya dalam bahasa Arab di kolom berikut ini\n*Pertanyaan akan ditinjau terlebih dahulu oleh panitia sebelum dipublikasikan",
+    'tagline' => "*Ajukan pertanyaan kepada Syaikh dengan menuliskannya di kolom berikut ini\n*Pertanyaan akan ditinjau terlebih dahulu oleh panitia sebelum dipublikasikan",
 
     'nav' => [
         'home' => 'Beranda',
@@ -14,7 +14,7 @@ return [
 
     'home' => [
         'have_question' => 'Punya pertanyaan?',
-        'intro' => "*Ajukan pertanyaan kepada Syaikh dengan menuliskannya dalam bahasa Arab di kolom berikut ini",
+        'intro' => "*Ajukan pertanyaan kepada Syaikh dengan menuliskannya di kolom berikut ini",
         'submit_cta' => 'Kirim Pertanyaan',
         'browse_cta' => 'Lihat Pertanyaan',
     ],

@@ -1,0 +1,44 @@
+{
+    "$schema": "./deploy.manifest.schema.json",
+    "description": "Deploy task definitions for daurah.syathiby.id production. Edit this file to define logical deploy units, then run scripts\\deploy.ps1.",
+    "global": {
+        "postCommands": [
+            "cd /home/u4486592/public_html/daurah.syathiby.id && find storage/framework/views -type f -delete 2>/dev/null; echo done"
+        ]
+    },
+    "tasks": {
+        "login": {
+            "name": "Login error handling",
+            "description": "Clear inline error when nohp not registered (replaces silent redirect to /konfirmasi)",
+            "files": [
+                "app/Http/Controllers/Auth/LoginController.php",
+                "resources/views/auth/login.blade.php"
+            ]
+        },
+        "konfirmasi": {
+            "name": "Konfirmasi (registration) form",
+            "description": "Registration form controller and views",
+            "files": [
+                "app/Http/Controllers/Auth/KonfirmasiController.php",
+                "resources/views/auth/konfirmasi.blade.php",
+                "resources/views/auth/konfirmasi-closed.blade.php"
+            ]
+        },
+        "admin": {
+            "name": "Admin dashboard & users",
+            "description": "Admin panel controllers and views",
+            "files": [
+                "app/Http/Controllers/Admin/*.php",
+                "resources/views/admin/**/*.blade.php"
+            ]
+        },
+        "user": {
+            "name": "User dashboard",
+            "description": "User-facing dashboard and pages",
+            "files": [
+                "app/Http/Controllers/User/*.php",
+                "resources/views/user/**/*.blade.php"
+            ]
+        }
+    }
+}
