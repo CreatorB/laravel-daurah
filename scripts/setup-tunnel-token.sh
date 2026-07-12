@@ -52,6 +52,7 @@ echo "=== [3/7] Write config.yml ==="
 cat > "$CONFIG_DIR/config.yml" <<EOF
 tunnel: $TUNNEL_ID
 credentials-file: $CONFIG_DIR/$TUNNEL_ID.json
+protocol: http2
 no-autoupdate: true
 
 ingress:
